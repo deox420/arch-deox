@@ -1,0 +1,29 @@
+---
+# Playbook principal de arch-deox. Equivalente declarativo de install.sh.
+#
+# Uso:
+#   ansible-galaxy collection install -r ansible/requirements.yml
+#   ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
+#   # Con pentest:
+#   ansible-playbook -i ... ansible/site.yml -K -e install_pentest=true
+#
+# --ask-become-pass (-K) porque varias tareas usan sudo.
+
+- name: Provision arch-deox
+  hosts: local
+  gather_facts: true
+  become: false
+
+  pre_tasks:
+    - name: Verificar que es Arch Linux
+      ansible.builtin.stat:
+        path: /etc/arch-release
+      register: arch_release
+      failed_when: not arch_release.stat.exists
+
+  roles:
+    - role: base
+    - role: aur
+    - role: dotfiles
+    - role: pentest
+      when: install_pentest | bool

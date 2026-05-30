@@ -1,0 +1,5 @@
+# Colecciones necesarias. Instala con:
+#   ansible-galaxy collection install -r ansible/requirements.yml
+collections:
+  - name: community.general   # módulo pacman
+  - name: kewlfft.aur         # módulo aur (usa paru)

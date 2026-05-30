@@ -1,0 +1,51 @@
+---
+# aur: helper paru + paquetes del AUR.
+
+- name: Comprobar si paru está instalado
+  ansible.builtin.command: paru --version
+  register: paru_check
+  changed_when: false
+  failed_when: false
+
+- name: Bootstrap de paru (si falta)
+  when: paru_check.rc != 0
+  block:
+    - name: Dependencias para compilar del AUR
+      community.general.pacman:
+        name:
+          - base-devel
+          - git
+        state: present
+      become: true
+
+    - name: Clonar paru desde el AUR
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/paru.git
+        dest: /tmp/paru
+        version: master
+      become: true
+      become_user: "{{ target_user }}"
+
+    - name: Compilar e instalar paru (makepkg -si)
+      ansible.builtin.command:
+        cmd: makepkg -si --noconfirm
+        chdir: /tmp/paru
+      become: true
+      become_user: "{{ target_user }}"
+      register: paru_build
+      changed_when: "'is up to date' not in paru_build.stdout"
+
+- name: Leer lista de paquetes AUR
+  ansible.builtin.set_fact:
+    aur_packages: >-
+      {{ lookup('file', playbook_dir + '/../packages/pkglist-aur.txt').splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list }}
+
+- name: Instalar paquetes del AUR con paru
+  kewlfft.aur.aur:
+    use: paru
+    name: "{{ aur_packages }}"
+    state: present
+  become: true
+  become_user: "{{ target_user }}"
+  when: aur_packages | length > 0

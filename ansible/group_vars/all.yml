@@ -1,0 +1,23 @@
+---
+# Variables comunes para el provisioning de arch-deox.
+
+# Usuario destino (dueño de dotfiles y de las builds AUR).
+target_user: deox
+user_home: "/home/{{ target_user }}"
+
+# Usuario de GitHub para chezmoi.
+gh_user: deox420
+
+# Servicios a habilitar (nivel sistema).
+system_services:
+  - NetworkManager.service
+  - systemd-timesyncd.service
+
+# Capa de pentesting BlackArch: desactivada por defecto.
+# Actívala con:  ansible-playbook ... -e install_pentest=true
+install_pentest: false
+
+# Grupos blackarch-* a instalar si install_pentest=true (edítalos).
+blackarch_groups: []
+  # - blackarch-recon
+  # - blackarch-webapp

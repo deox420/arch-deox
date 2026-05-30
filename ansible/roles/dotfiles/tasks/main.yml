@@ -1,0 +1,22 @@
+---
+# dotfiles: despliegue con chezmoi (como usuario destino).
+
+- name: Asegurar chezmoi instalado
+  community.general.pacman:
+    name: chezmoi
+    state: present
+  become: true
+
+- name: chezmoi init --apply (idempotente vía 'creates')
+  ansible.builtin.command:
+    cmd: "chezmoi init --apply {{ gh_user }}"
+    creates: "{{ user_home }}/.local/share/chezmoi/.git"
+  become: true
+  become_user: "{{ target_user }}"
+
+- name: Aplicar cambios de dotfiles en ejecuciones posteriores
+  ansible.builtin.command: chezmoi apply
+  become: true
+  become_user: "{{ target_user }}"
+  register: chezmoi_apply
+  changed_when: chezmoi_apply.stdout | length > 0

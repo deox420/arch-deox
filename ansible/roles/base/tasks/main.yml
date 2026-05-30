@@ -1,0 +1,28 @@
+---
+# base: paquetes nativos + servicios del sistema.
+
+- name: Leer lista de paquetes nativos
+  ansible.builtin.set_fact:
+    native_packages: >-
+      {{ lookup('file', playbook_dir + '/../packages/pkglist-native.txt').splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list }}
+
+- name: Actualizar la base de datos de pacman
+  community.general.pacman:
+    update_cache: true
+  become: true
+
+- name: Instalar paquetes nativos
+  community.general.pacman:
+    name: "{{ native_packages }}"
+    state: present
+  become: true
+  when: native_packages | length > 0
+
+- name: Habilitar servicios del sistema
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ system_services }}"
+  become: true
