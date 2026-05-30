@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  deoxhud — panel sci-fi estilo eDEX-UI montado en tmux.
+#  (Nombre propio: NO se llama 'edex', por respeto al autor de eDEX-UI.)
+#
+#  Layout:
+#    ┌───────────────────────────────┬──────────┐
+#    │  fastfetch (specs, cabecera)   │  reloj   │
+#    ├───────────────────────────────┤          │
+#    │                               ├──────────┤
+#    │            btop               │  cava    │
+#    │     (CPU / RAM / red)         ├──────────┤
+#    │                               │  matrix  │
+#    └───────────────────────────────┴──────────┘
+#
+#  Uso:  deoxhud         → abre (o reconecta a) el panel
+#        Ctrl-a d        → "detach" (lo deja en segundo plano)
+#        Ctrl-a &        → cerrar la sesión del panel
+# ============================================================================
+set -euo pipefail
+SESSION=deoxhud
+
+# Si la sesión ya existe, simplemente reconecta.
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  exec tmux attach -t "$SESSION"
+fi
+
+# --- Dependencias ---
+need=(tmux btop fastfetch cava)
+miss=()
+for c in "${need[@]}"; do command -v "$c" >/dev/null 2>&1 || miss+=("$c"); done
+if ((${#miss[@]})); then
+  echo "deoxhud: faltan paquetes necesarios: ${miss[*]}" >&2
+  echo "  Instálalos con:  sudo pacman -S ${miss[*]}" >&2
+  exit 1
+fi
+
+# Opcionales: si faltan, uso un respaldo razonable.
+if command -v tty-clock >/dev/null 2>&1; then clock_cmd="tty-clock -c -C 6 -s"
+else                                          clock_cmd="watch -t -n1 -- date +%T"; fi
+if command -v cmatrix >/dev/null 2>&1; then   matrix_cmd="cmatrix -ab -C cyan"
+else                                          matrix_cmd="cava"; fi
+
+# --- Construye el layout (uso IDs de panel, robusto ante base-index) ---
+tmux new-session -d -s "$SESSION" -n hud
+
+p_head=$(tmux list-panes -t "${SESSION}:hud" -F '#{pane_id}' | head -1)
+tmux send-keys -t "$p_head" "clear; fastfetch; echo; exec \$SHELL" C-m
+
+p_btop=$(tmux split-window -v -l 78% -t "$p_head" -P -F '#{pane_id}')
+tmux send-keys -t "$p_btop" "btop" C-m
+
+p_clock=$(tmux split-window -h -l 34% -t "$p_btop" -P -F '#{pane_id}')
+tmux send-keys -t "$p_clock" "$clock_cmd" C-m
+
+p_cava=$(tmux split-window -v -l 62% -t "$p_clock" -P -F '#{pane_id}')
+tmux send-keys -t "$p_cava" "cava" C-m
+
+p_matrix=$(tmux split-window -v -l 45% -t "$p_cava" -P -F '#{pane_id}')
+tmux send-keys -t "$p_matrix" "$matrix_cmd" C-m
+
+tmux select-pane -t "$p_btop"
+exec tmux attach -t "$SESSION"

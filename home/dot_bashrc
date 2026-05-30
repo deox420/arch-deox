@@ -1,0 +1,32 @@
+#
+# ~/.bashrc — arch-deox
+#
+
+# Si no es una shell interactiva, no hacer nada.
+[[ $- != *i* ]] && return
+
+# ---------- PATH ----------
+export PATH="$HOME/.local/bin:$PATH"
+
+# ---------- Alias básicos ----------
+alias ls='ls --color=auto'
+alias ll='ls -lah --color=auto'
+alias la='ls -A --color=auto'
+alias grep='grep --color=auto'
+alias ip='ip --color=auto'
+# Editor por defecto
+export EDITOR=vim
+
+# ---------- Atajos del entorno ----------
+# Lanza el panel sci-fi (estilo eDEX). Si no está instalado, avisa.
+alias hud='deoxhud'
+# Recargar la config de Hyprland sin cerrar sesión.
+alias hyprreload='hyprctl reload'
+
+# ---------- Prompt: starship (si está instalado) ----------
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init bash)"
+else
+    # Respaldo si aún no instalaste starship.
+    PS1='[\u@\h \W]\$ '
+fi
