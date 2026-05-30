@@ -1,0 +1,86 @@
+# ==========================================================================
+# ~/.zshrc — arch-deox. Shell: Zsh + Powerlevel10k.
+# Gestionado por chezmoi. Cada bloque está protegido: si un paquete no está
+# instalado, simplemente se omite (no rompe el arranque del shell).
+#
+# Paquetes que aprovecha (ver packages/pkglist-*.txt):
+#   zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k(-git)
+#   fzf eza bat ripgrep fd zoxide
+# ==========================================================================
+
+# --- Powerlevel10k instant prompt (debe ir CASI al principio) --------------
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# --- Helper: carga el primer fichero que exista ----------------------------
+_src() { local f; for f in "$@"; do [[ -r "$f" ]] && { source "$f"; return 0; }; done; return 1; }
+
+# --- Historial -------------------------------------------------------------
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+setopt INC_APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_DUPS HIST_IGNORE_SPACE HIST_REDUCE_BLANKS
+setopt AUTO_CD INTERACTIVE_COMMENTS
+
+# --- Completado ------------------------------------------------------------
+autoload -Uz compinit && compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # ignora mayúsculas
+zstyle ':completion:*' list-colors ''
+
+# --- Powerlevel10k (tema) --------------------------------------------------
+_src /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme \
+     /usr/share/zsh/themes/powerlevel10k/powerlevel10k.zsh-theme \
+     "$HOME/.local/share/powerlevel10k/powerlevel10k.zsh-theme"
+# Config del prompt (genera/ajusta el tuyo con: p10k configure)
+[[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
+
+# --- Plugins: autosuggestions ---------------------------------------------
+_src /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#6c7086'   # gris Catppuccin
+
+# --- fzf (Ctrl+R historial, Ctrl+T archivos) -------------------------------
+_src /usr/share/fzf/key-bindings.zsh
+_src /usr/share/fzf/completion.zsh
+export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border --color=fg:#cdd6f4,bg:#1e1e2e,hl:#cba6f7,fg+:#cdd6f4,bg+:#313244,hl+:#cba6f7,pointer:#f5c2e7,prompt:#89b4fa"
+
+# --- zoxide (cd inteligente: z <dir>) --------------------------------------
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+
+# --- Alias modernos (solo si la herramienta está instalada) ----------------
+if command -v eza &>/dev/null; then
+  alias ls='eza --icons --group-directories-first'
+  alias ll='eza -la --icons --group-directories-first --git'
+  alias la='eza -a --icons --group-directories-first'
+  alias lt='eza --tree --level=2 --icons'
+fi
+command -v bat &>/dev/null && alias cat='bat --paging=never'
+command -v rg  &>/dev/null && alias grep='rg'
+command -v fd  &>/dev/null && alias find='fd'
+
+# --- Alias de git ----------------------------------------------------------
+alias gs='git status -sb'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate -20'
+alias gd='git diff'
+alias gco='git checkout'
+
+# --- Alias de pentest (uso autorizado) -------------------------------------
+# Lanzador Rofi por categoría (desplegado por chezmoi en ~/.local/bin):
+alias pentest='rofi-pentest.sh'
+# Listar grupos BlackArch disponibles:
+alias bagroups='pacman -Sg 2>/dev/null | awk "/blackarch/{print \$1}" | sort -u'
+
+# --- Calidad de vida -------------------------------------------------------
+alias ..='cd ..'
+alias ...='cd ../..'
+alias mirror-update='sudo reflector --country ES --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist'
+mkcd() { mkdir -p "$1" && cd "$1"; }
+export EDITOR=vim
+export VISUAL=vim
+
+# --- syntax-highlighting (DEBE ir al FINAL del fichero) --------------------
+_src /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

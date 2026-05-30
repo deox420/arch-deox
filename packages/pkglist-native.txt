@@ -1,3 +1,65 @@
 # pkglist-native.txt — paquetes nativos (repos oficiales de Arch)
-# Regenerar con: pacman -Qqen > packages/pkglist-native.txt
-# Una entrada por línea. Las líneas que empiezan por '#' se ignoran.
+#
+# Baseline RECOMENDADA para arrancar el sistema (escritorio + shell). En tu
+# Arch real, una vez instalado lo que quieras, regenera el SNAPSHOT exacto con:
+#   pacman -Qqen > packages/pkglist-native.txt
+# Las líneas con '#' y las vacías se ignoran (install.sh / ansible).
+
+# --- Base / sistema ---
+base-devel
+git
+sudo
+vim
+man-db
+man-pages
+openssh
+wget
+curl
+unzip
+htop
+reflector
+chezmoi
+networkmanager
+network-manager-applet
+
+# --- Audio (PipeWire) ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+
+# --- Hyprland + entorno Wayland ---
+hyprland
+hyprpaper
+waybar
+rofi
+mako
+kitty
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt6-wayland
+polkit
+brightnessctl
+grim
+slurp
+wl-clipboard
+thunar
+firefox
+
+# --- Fuentes / iconos ---
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+papirus-icon-theme
+
+# --- Shell (Zsh + herramientas CLI modernas) ---
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+fzf
+eza
+bat
+ripgrep
+fd
+zoxide

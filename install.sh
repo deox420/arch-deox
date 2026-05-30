@@ -158,6 +158,24 @@ deploy_dotfiles() {
   ok "Dotfiles desplegados."
 }
 
+# --- Paso 4b: shell por defecto (zsh) -------------------------------------
+set_default_shell() {
+  have zsh || { warn "zsh no instalado; salto cambio de shell."; return; }
+  local zsh_path; zsh_path="$(command -v zsh)"
+  if [[ "${SHELL:-}" == "$zsh_path" ]]; then
+    ok "zsh ya es tu shell por defecto."
+    return
+  fi
+  info "Tu shell actual es ${SHELL:-desconocido}."
+  read -rp "¿Poner zsh como shell por defecto (chsh)? [y/N] " ans
+  if [[ "${ans,,}" == "y" ]]; then
+    run chsh -s "$zsh_path"
+    ok "Shell por defecto -> zsh (efectivo al volver a iniciar sesión)."
+  else
+    warn "Se mantiene tu shell actual."
+  fi
+}
+
 # --- Paso 5: servicios -----------------------------------------------------
 enable_services() {
   info "Habilitando servicios del sistema…"
@@ -193,6 +211,7 @@ main() {
   restore_native
   restore_aur
   deploy_dotfiles
+  set_default_shell
   enable_services
 
   ok "Bootstrap completado."

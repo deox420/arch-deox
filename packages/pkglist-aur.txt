@@ -1,3 +1,9 @@
-# pkglist-aur.txt — paquetes del AUR (foráneos)
-# Regenerar con: pacman -Qqem > packages/pkglist-aur.txt
-# Una entrada por línea. Las líneas que empiezan por '#' se ignoran.
+# pkglist-aur.txt — paquetes del AUR (foráneos, vía paru)
+#
+# Baseline RECOMENDADA. En tu Arch real, regenera el SNAPSHOT exacto con:
+#   pacman -Qqem > packages/pkglist-aur.txt
+# Las líneas con '#' y las vacías se ignoran.
+
+# Prompt Powerlevel10k (tema de Zsh).
+# Verifica el nombre disponible en tu sistema: paru -Ss powerlevel10k
+zsh-theme-powerlevel10k-git

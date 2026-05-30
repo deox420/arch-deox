@@ -54,10 +54,11 @@ Flujo completo para tu primera instalación de Arch:
    ```
 4. **(Opcional) capa de pentesting** BlackArch: ver `pentest/`.
 
-> ⚠️ Este repo se está **autorizando desde una máquina que NO es Arch**, así que
-> `pkglist-native.txt` y `pkglist-aur.txt` van vacías (solo cabecera) hasta que
-> ejecutes el paso 3 en el Arch real. Los dotfiles de `home/` son una **baseline
-> Catppuccin** lista para arrancar; ajústala a tu gusto.
+> ⚠️ Este repo se está **autorizando desde una máquina que NO es Arch**. Las
+> listas `pkglist-*.txt` traen una **baseline recomendada** (escritorio Hyprland
+> + shell Zsh) para que el primer arranque funcione; en el Arch real, regenera
+> el **snapshot exacto** con el paso 3. Los dotfiles de `home/` son una baseline
+> Catppuccin + Zsh/Powerlevel10k lista para usar; ajústala a tu gusto.
 
 ### Opción A — desde un Arch ya instalado
 
