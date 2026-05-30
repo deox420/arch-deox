@@ -1,0 +1,28 @@
+{
+  "__comment": "archinstall config para arch-deox. NO contiene contrasenas (van en user_credentials.json, que esta en .gitignore). VERIFICA las claves contra tu version: archinstall --version. El disco se elige aparte (user_disk_layout.json) o interactivamente.",
+  "archinstall-language": "English",
+  "bootloader": "Systemd-boot",
+  "hostname": "arch-deox",
+  "kernels": ["linux"],
+  "locale_config": {
+    "kb_layout": "es",
+    "sys_enc": "UTF-8",
+    "sys_lang": "es_ES"
+  },
+  "ntp": true,
+  "timezone": "Europe/Madrid",
+  "swap": true,
+  "audio_config": { "audio": "pipewire" },
+  "network_config": { "type": "nm" },
+  "profile_config": null,
+  "packages": [
+    "git",
+    "base-devel",
+    "chezmoi",
+    "networkmanager",
+    "vim",
+    "sudo"
+  ],
+  "additional-repositories": [],
+  "parallel downloads": 5
+}

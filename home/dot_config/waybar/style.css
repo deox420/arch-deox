@@ -1,0 +1,55 @@
+/* Waybar style — Catppuccin Mocha (arch-deox) */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free";
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(30, 30, 46, 0.92); /* base */
+    color: #cdd6f4;                      /* text */
+}
+
+#workspaces button {
+    padding: 0 8px;
+    color: #a6adc8;
+    background: transparent;
+}
+
+#workspaces button.active {
+    color: #1e1e2e;
+    background: #cba6f7; /* mauve */
+    border-radius: 8px;
+}
+
+#workspaces button:hover {
+    background: #45475a;
+    border-radius: 8px;
+}
+
+#clock,
+#cpu,
+#memory,
+#battery,
+#network,
+#pulseaudio,
+#tray,
+#window {
+    padding: 0 10px;
+    margin: 4px 2px;
+    border-radius: 8px;
+    background: rgba(49, 50, 68, 0.6); /* surface0 */
+}
+
+#clock      { color: #f9e2af; } /* yellow */
+#cpu        { color: #a6e3a1; } /* green  */
+#memory     { color: #89dceb; } /* sky    */
+#network    { color: #89b4fa; } /* blue   */
+#pulseaudio { color: #f5c2e7; } /* pink   */
+#battery    { color: #a6e3a1; }
+
+#battery.warning  { color: #fab387; } /* peach */
+#battery.critical { color: #f38ba8; } /* red   */

@@ -1,0 +1,79 @@
+# ==========================================================================
+# .gitignore — arch-deox
+#
+# Estrategia: ALLOWLIST. Por defecto ignoramos cualquier cosa sensible y
+# solo dejamos pasar lo que sabemos que es seguro versionar. Si dudas de un
+# fichero, NO lo añadas: revísalo a mano antes.
+#
+# Regla de oro (CLAUDE.md): NUNCA commitear secretos. Los secretos se
+# cifran con age vía chezmoi (chezmoi add --encrypt), nunca en claro.
+# ==========================================================================
+
+# --- Secretos y credenciales -----------------------------------------------
+*.key
+*.pem
+*.gpg
+*.asc
+*.p12
+*.pfx
+*credentials*
+*secret*
+*password*
+*token*
+user_credentials.json
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+*.kdbx
+
+# Claves y config SSH/GPG en claro
+.ssh/
+.gnupg/
+secring.*
+
+# Archivos cifrados con age que NO deban subirse (los .age de chezmoi sí
+# pueden ir; descomenta la siguiente línea si prefieres excluirlos todos):
+# *.age
+
+# --- Caché, estado e historial ----------------------------------------------
+cache/
+.cache/
+*.log
+history.jsonl
+*.history
+.DS_Store
+Thumbs.db
+
+# Estado local de chezmoi
+.chezmoistate.boltdb
+chezmoistate.boltdb
+
+# --- Artefactos de build / ISO ----------------------------------------------
+# La ISO y el work dir de archiso son enormes y reproducibles: no se versionan.
+*.iso
+iso/work/
+iso/out/
+work/
+out/
+
+# --- Editores e IDE ---------------------------------------------------------
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# --- Python (ansible venv, etc.) --------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ==========================================================================
+# Excepciones (allowlist): forzar el versionado de placeholders aunque
+# alguna regla de arriba pudiera afectarlos.
+# ==========================================================================
+!.gitkeep
+!packages/pkglist-native.txt
+!packages/pkglist-aur.txt

@@ -1,0 +1,29 @@
+{
+  "__comment_PELIGRO": "ESTE ARCHIVO BORRA EL DISCO INDICADO. 'device' esta puesto a /dev/CHANGEME a proposito para que NO funcione hasta que pongas tu disco real (revisa con 'lsblk'). Para tu PRIMERA instalacion de Arch se RECOMIENDA elegir el disco interactivamente en archinstall (lo ves con tus ojos) en vez de usar este fichero. Layout: GPT, EFI 512M (FAT32) + raiz ext4 (resto). Sin cifrado.",
+  "config_type": "default_layout",
+  "device_modifications": [
+    {
+      "device": "/dev/CHANGEME",
+      "wipe": true,
+      "partitions": [
+        {
+          "type": "primary",
+          "status": "create",
+          "flags": ["boot", "esp"],
+          "fs_type": "fat32",
+          "mountpoint": "/boot",
+          "size": { "value": 512, "unit": "MiB" },
+          "start": { "value": 1, "unit": "MiB" }
+        },
+        {
+          "type": "primary",
+          "status": "create",
+          "flags": [],
+          "fs_type": "ext4",
+          "mountpoint": "/",
+          "size": { "value": 100, "unit": "Percent" }
+        }
+      ]
+    }
+  ]
+}
