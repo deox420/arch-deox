@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# arch-deox-install — lanza archinstall con la config remota del repo.
+# Disponible en el entorno live de la ISO arch-deox.
+set -Eeuo pipefail
+
+CONFIG_URL="https://raw.githubusercontent.com/deox420/arch-deox/main/archinstall/user_configuration.json"
+
+echo "[*] Comprueba tu disco antes de continuar:"
+lsblk -o NAME,SIZE,TYPE,MOUNTPOINTS
+echo
+echo "[!] El disco se elige DENTRO de archinstall (no se borra nada sin tu OK)."
+read -rp "Lanzar archinstall con la config de arch-deox? [y/N] " ans
+[[ "${ans,,}" == "y" ]] || { echo "Cancelado."; exit 1; }
+
+exec archinstall --config "$CONFIG_URL"

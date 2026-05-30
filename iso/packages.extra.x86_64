@@ -1,0 +1,36 @@
+# packages.extra.x86_64 — paquetes EXTRA para la ISO live (arch-deox).
+#
+# Se AÑADEN a los del perfil releng oficial (no lo reemplazan). build.sh los
+# concatena a packages.x86_64 del perfil base. Una entrada por línea, sin
+# versiones. Comentarios con '#'.
+
+# --- Herramientas para instalar/clonar ---
+git
+chezmoi
+archinstall
+
+# --- Ricing (para probar el entorno desde la live) ---
+hyprland
+waybar
+rofi-wayland
+mako
+kitty
+hyprpaper
+xdg-desktop-portal-hyprland
+qt5-wayland
+qt6-wayland
+polkit
+
+# --- Fuentes / iconos ---
+ttf-jetbrains-mono-nerd
+papirus-icon-theme
+
+# --- Utilidad ---
+networkmanager
+firefox
+brightnessctl
+grim
+slurp
+wl-clipboard
+pavucontrol
+thunar

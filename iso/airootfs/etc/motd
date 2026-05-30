@@ -1,0 +1,13 @@
+
+  ███  arch-deox — medio live  ███
+
+  Instalar Arch con mi configuración:
+    arch-deox-install        # archinstall con mi user_configuration.json
+
+  Tras reiniciar al sistema nuevo:
+    git clone https://github.com/deox420/arch-deox.git
+    cd arch-deox && ./install.sh --dry-run   # revisa
+    ./install.sh                              # aplica
+
+  Herramientas de pentest: solo para uso autorizado.
+
