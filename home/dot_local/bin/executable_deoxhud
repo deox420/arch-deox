@@ -3,19 +3,22 @@
 #  deoxhud — panel sci-fi estilo eDEX-UI montado en tmux.
 #  (Nombre propio: NO se llama 'edex', por respeto al autor de eDEX-UI.)
 #
-#  Layout:
-#    ┌───────────────────────────────┬──────────┐
-#    │  fastfetch (specs, cabecera)   │  reloj   │
-#    ├───────────────────────────────┤          │
-#    │                               ├──────────┤
-#    │            btop               │  cava    │
-#    │     (CPU / RAM / red)         ├──────────┤
-#    │                               │  matrix  │
-#    └───────────────────────────────┴──────────┘
+#  LO PRINCIPAL es la TERMINAL FUNCIONAL (izquierda, grande). El resto es
+#  decoración secundaria en una columna estrecha a la derecha.
 #
-#  Uso:  deoxhud         → abre (o reconecta a) el panel
-#        Ctrl-a d        → "detach" (lo deja en segundo plano)
-#        Ctrl-a &        → cerrar la sesión del panel
+#    ┌──────────────────────────────┬─────────────┐
+#    │                             │  reloj 🕒   │  (recuadro pequeño)
+#    │                             ├─────────────┤
+#    │   TERMINAL FUNCIONAL        │  btop       │  (CPU/RAM/red)
+#    │   (tu shell — protagonista) ├─────────────┤
+#    │                             │  cava 🎵    │  (audio)
+#    │                             ├─────────────┤
+#    │                             │  globo 🪐   │  (planeta girando)
+#    └──────────────────────────────┴─────────────┘
+#
+#  Uso:  deoxhud      → abre (o reconecta a) el panel; el foco queda en la terminal
+#        Ctrl-a d     → "detach" (lo deja en segundo plano)
+#        Ctrl-a &     → cerrar la sesión del panel
 # ============================================================================
 set -euo pipefail
 SESSION=deoxhud
@@ -25,7 +28,7 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   exec tmux attach -t "$SESSION"
 fi
 
-# --- Dependencias ---
+# --- Dependencias mínimas ---
 need=(tmux btop fastfetch cava)
 miss=()
 for c in "${need[@]}"; do command -v "$c" >/dev/null 2>&1 || miss+=("$c"); done
@@ -35,29 +38,45 @@ if ((${#miss[@]})); then
   exit 1
 fi
 
-# Opcionales: si faltan, uso un respaldo razonable.
-if command -v tty-clock >/dev/null 2>&1; then clock_cmd="tty-clock -c -C 6 -s"
-else                                          clock_cmd="watch -t -n1 -- date +%T"; fi
-if command -v cmatrix >/dev/null 2>&1; then   matrix_cmd="cmatrix -ab -C cyan"
-else                                          matrix_cmd="cava"; fi
+# Reloj compacto en recuadro (-x = caja, -c = centrado, -b = negrita, -s = segundos).
+if command -v tty-clock >/dev/null 2>&1; then
+  clock_cmd='tty-clock -c -x -b -s -C 6 -f "%d/%m/%Y"'
+else
+  clock_cmd='watch -t -c -n1 -- date "+%H:%M:%S%n%d/%m/%Y"'
+fi
+
+# Planeta ASCII (script propio). Si faltara python, uso cmatrix o cava de respaldo.
+if command -v deoxhud-globe >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  globe_cmd='deoxhud-globe'
+elif command -v cmatrix >/dev/null 2>&1; then
+  globe_cmd='cmatrix -ab -C cyan'
+else
+  globe_cmd='cava'
+fi
 
 # --- Construye el layout (uso IDs de panel, robusto ante base-index) ---
 tmux new-session -d -s "$SESSION" -n hud
 
-p_head=$(tmux list-panes -t "${SESSION}:hud" -F '#{pane_id}' | head -1)
-tmux send-keys -t "$p_head" "clear; fastfetch; echo; exec \$SHELL" C-m
+# Panel PRINCIPAL (izquierda): fastfetch como intro y luego tu shell de trabajo.
+p_main=$(tmux list-panes -t "${SESSION}:hud" -F '#{pane_id}' | head -1)
+tmux send-keys -t "$p_main" "clear; fastfetch; echo; exec \$SHELL" C-m
 
-p_btop=$(tmux split-window -v -l 78% -t "$p_head" -P -F '#{pane_id}')
-tmux send-keys -t "$p_btop" "btop" C-m
-
-p_clock=$(tmux split-window -h -l 34% -t "$p_btop" -P -F '#{pane_id}')
+# Columna derecha (decoración), 34% del ancho. Arriba el reloj.
+p_clock=$(tmux split-window -h -l 34% -t "$p_main" -P -F '#{pane_id}')
 tmux send-keys -t "$p_clock" "$clock_cmd" C-m
 
-p_cava=$(tmux split-window -v -l 62% -t "$p_clock" -P -F '#{pane_id}')
+# El reloj queda pequeño arriba (16%); debajo, btop.
+p_btop=$(tmux split-window -v -l 84% -t "$p_clock" -P -F '#{pane_id}')
+tmux send-keys -t "$p_btop" "btop" C-m
+
+# Debajo de btop: cava.
+p_cava=$(tmux split-window -v -l 50% -t "$p_btop" -P -F '#{pane_id}')
 tmux send-keys -t "$p_cava" "cava" C-m
 
-p_matrix=$(tmux split-window -v -l 45% -t "$p_cava" -P -F '#{pane_id}')
-tmux send-keys -t "$p_matrix" "$matrix_cmd" C-m
+# Debajo de cava: el globo/planeta.
+p_globe=$(tmux split-window -v -l 50% -t "$p_cava" -P -F '#{pane_id}')
+tmux send-keys -t "$p_globe" "$globe_cmd" C-m
 
-tmux select-pane -t "$p_btop"
+# El foco arranca en la TERMINAL FUNCIONAL (lo principal).
+tmux select-pane -t "$p_main"
 exec tmux attach -t "$SESSION"

@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  deoxhud-globe — globo/planeta ASCII girando (decoración estilo eDEX)
+#  Sin dependencias externas (solo Python stdlib). Se adapta al tamaño del panel.
+#  Sale con Ctrl-C / q.  Uso interno del panel `deoxhud`.
+# ============================================================================
+import math, time, shutil, sys, signal
+
+signal.signal(signal.SIGINT, lambda *_: (_show(), sys.exit(0)))
+
+RAMP  = " .,:;ir=+*xX$&@"          # rampa de luminancia (oscuro → brillante)
+CYAN  = "\033[38;5;44m"            # superficie del planeta
+GRID  = "\033[38;5;51m"            # meridianos/paralelos (más brillante)
+RESET = "\033[0m"
+
+def _hide(): sys.stdout.write("\033[?25l")
+def _show(): sys.stdout.write("\033[?25h" + RESET)
+
+A, B = 0.0, 0.5                    # ángulos de rotación
+_hide()
+try:
+    while True:
+        cols, rows = shutil.get_terminal_size((30, 16))
+        W, H = max(cols, 10), max(rows, 8)
+        zbuf = [-1e9] * (W * H)
+        cbuf = [' '] * (W * H)
+        kind = [0]   * (W * H)     # 0 vacío · 1 superficie · 2 rejilla
+        cx, cy = W / 2.0, H / 2.0
+        R = min(W / 2.0, H) * 0.92
+        sA, cA = math.sin(A), math.cos(A)
+        sB, cB = math.sin(B), math.cos(B)
+        lx, ly, lz = 0.0, 0.55, 0.83          # dirección de la luz (normalizada)
+
+        t = 0.06
+        while t < math.pi:
+            st, ct = math.sin(t), math.cos(t)
+            parallel = (t % (math.pi / 6)) < 0.05
+            dphi = 0.03 / max(st, 0.15)
+            f = 0.0
+            while f < 2 * math.pi:
+                cp, sp = math.cos(f), math.sin(f)
+                x, y, z = st * cp, ct, st * sp
+                # rotar sobre Y
+                x1 =  x * cB + z * sB
+                z1 = -x * sB + z * cB
+                y1 =  y
+                # rotar sobre X
+                y2 = y1 * cA - z1 * sA
+                z2 = y1 * sA + z1 * cA
+                x2 = x1
+                # proyección ortográfica (celdas ~2× más altas que anchas)
+                sx = int(cx + R * x2)
+                sy = int(cy - (R * 0.5) * y2)
+                if 0 <= sx < W and 0 <= sy < H:
+                    idx = sy * W + sx
+                    if z2 > zbuf[idx]:
+                        zbuf[idx] = z2
+                        lum = x2 * lx + y2 * ly + z2 * lz      # normal·luz
+                        meridian = (f % (math.pi / 6)) < dphi * 1.5
+                        if parallel or meridian:
+                            cbuf[idx] = 'o' if lum > 0 else '·'
+                            kind[idx] = 2
+                        else:
+                            li = int((lum * 0.5 + 0.5) * (len(RAMP) - 1))
+                            cbuf[idx] = RAMP[max(0, min(len(RAMP) - 1, li))]
+                            kind[idx] = 1
+                f += dphi
+            t += 0.06
+
+        out = []
+        for yy in range(H):
+            line, cur = [], -1
+            base = yy * W
+            for xx in range(W):
+                idx = base + xx
+                k = kind[idx]
+                if k != cur:
+                    line.append(GRID if k == 2 else (CYAN if k == 1 else RESET))
+                    cur = k
+                line.append(cbuf[idx])
+            line.append(RESET)
+            out.append(''.join(line))
+        sys.stdout.write("\033[H" + "\n".join(out))
+        sys.stdout.flush()
+
+        A += 0.04
+        B += 0.03
+        time.sleep(0.05)
+finally:
+    _show()
