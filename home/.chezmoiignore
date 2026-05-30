@@ -1,0 +1,4 @@
+# Ficheros que chezmoi NO debe aplicar a $HOME.
+# (La raíz chezmoi es 'home/', así que packages/, pentest/, docs/, README y CLAUDE.md
+#  quedan fuera automáticamente.)
+README.md

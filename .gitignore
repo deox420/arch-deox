@@ -1,0 +1,7 @@
+# Artefactos locales que no van al repo
+*.swp
+*~
+.DS_Store
+# Claves age (¡nunca subir secretos!)
+*.key
+key.txt
