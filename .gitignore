@@ -5,3 +5,5 @@
 # Claves age (¡nunca subir secretos!)
 *.key
 key.txt
+__pycache__/
+*.pyc
