@@ -1,90 +1,178 @@
 #!/usr/bin/env python3
 # ============================================================================
-#  deoxhud-globe — globo/planeta ASCII girando (decoración estilo eDEX)
-#  Sin dependencias externas (solo Python stdlib). Se adapta al tamaño del panel.
-#  Sale con Ctrl-C / q.  Uso interno del panel `deoxhud`.
+#  deoxhud-globe — TIERRA ASCII girando (continentes verdes, mar azul) +
+#  reloj + fecha + calendario, todo en un mismo panel. Sin dependencias.
+#  El globo se dibuja REDONDO (corrige el aspecto ~2:1 de las celdas) y gira
+#  sobre su eje con una leve inclinación, como la Tierra.
+#  Sale con Ctrl-C.  Uso interno del panel `deoxhud`.
 # ============================================================================
-import math, time, shutil, sys, signal
+import math, time, shutil, sys, signal, calendar, datetime, locale
+
+for _loc in ("es_ES.UTF-8", "es_ES.utf8", "es_ES", ""):
+    try:
+        locale.setlocale(locale.LC_TIME, _loc); break
+    except locale.Error:
+        continue
 
 signal.signal(signal.SIGINT, lambda *_: (_show(), sys.exit(0)))
 
-RAMP  = " .,:;ir=+*xX$&@"          # rampa de luminancia (oscuro → brillante)
-CYAN  = "\033[38;5;44m"            # superficie del planeta
-GRID  = "\033[38;5;51m"            # meridianos/paralelos (más brillante)
-RESET = "\033[0m"
+SEA_R  = " .·:"                    # rampa de mar (tenue → claro)
+LAND_R = ":+*xX#%@"                # rampa de tierra (continentes, con relieve)
+SEA_C  = "\033[38;5;25m"           # azul mar
+SEA_CL = "\033[38;5;39m"           # azul claro (lado iluminado)
+LAND_C = "\033[38;5;28m"           # verde tierra
+LAND_CL= "\033[38;5;40m"           # verde claro (lado iluminado)
+GRID   = "\033[38;5;51m"
+GREEN  = "\033[38;5;48m"
+AMBER  = "\033[38;5;179m"
+TODAY  = "\033[7m"
+RESET  = "\033[0m"
+
+ASPECT = 2.05
+INFO_W = 23
+TILT   = 0.40                      # inclinación del eje (rad)
 
 def _hide(): sys.stdout.write("\033[?25l")
 def _show(): sys.stdout.write("\033[?25h" + RESET)
 
-A, B = 0.0, 0.5                    # ángulos de rotación
+# --- Máscara de tierra: continentes aproximados con elipses (lon_c,lat_c,lon_r,lat_r) ---
+_ELLIPSES = [
+    # Norteamérica
+    (-100, 47, 28, 19), (-93, 62, 33, 12), (-116, 38, 11, 14), (-82, 28, 11, 11),
+    # Groenlandia
+    (-42, 72, 12, 10),
+    # Sudamérica
+    (-60, -12, 14, 25), (-68, 4, 9, 11), (-71, -40, 5, 11),
+    # Europa
+    (12, 50, 20, 10), (26, 60, 18, 9),
+    # África
+    (18, 3, 21, 29), (20, 27, 17, 11), (46, -17, 7, 11),
+    # Asia
+    (90, 58, 50, 20), (62, 42, 22, 18), (78, 25, 16, 14),
+    (108, 30, 22, 18), (132, 45, 22, 13), (112, 12, 15, 11),
+    # Australia
+    (134, -25, 17, 10),
+]
+
+def _build_landmask(nlat=90, nlon=180):
+    mask = [[False] * nlon for _ in range(nlat)]
+    for i in range(nlat):
+        lat = 90.0 - (i + 0.5) * 180.0 / nlat
+        for j in range(nlon):
+            lon = -180.0 + (j + 0.5) * 360.0 / nlon
+            land = lat < -62.0                     # Antártida
+            if not land:
+                for (lc, tc, lr, tr) in _ELLIPSES:
+                    dlon = ((lon - lc + 180.0) % 360.0) - 180.0
+                    if (dlon / lr) ** 2 + ((lat - tc) / tr) ** 2 <= 1.0:
+                        land = True; break
+            mask[i][j] = land
+    return mask, nlat, nlon
+
+_MASK, _NLAT, _NLON = _build_landmask()
+
+def _is_land(lat, lon):
+    i = int((90.0 - lat) * _NLAT / 180.0)
+    j = int((lon + 180.0) * _NLON / 360.0)
+    if i < 0: i = 0
+    elif i >= _NLAT: i = _NLAT - 1
+    j %= _NLON
+    return _MASK[i][j]
+
+def info_lines():
+    now = datetime.datetime.now()
+    out = [GREEN + now.strftime("%H:%M:%S") + RESET,
+           AMBER + now.strftime("%a %d/%m/%Y")[:INFO_W] + RESET, ""]
+    out.append(GRID + now.strftime("%B %Y").capitalize().center(20) + RESET)
+    out.append(GRID + "Lu Ma Mi Ju Vi Sa Do" + RESET)
+    for week in calendar.Calendar(firstweekday=0).monthdayscalendar(now.year, now.month):
+        row = ""
+        for d in week:
+            if d == 0:           row += "   "
+            elif d == now.day:   row += TODAY + "%2d" % d + RESET + " "
+            else:                row += "%2d " % d
+        out.append(row.rstrip())
+    return out
+
+B = 0.0
+sA, cA = math.sin(TILT), math.cos(TILT)
+pW = pH = -1
 _hide()
 try:
     while True:
-        cols, rows = shutil.get_terminal_size((30, 16))
-        W, H = max(cols, 10), max(rows, 8)
-        zbuf = [-1e9] * (W * H)
-        cbuf = [' '] * (W * H)
-        kind = [0]   * (W * H)     # 0 vacío · 1 superficie · 2 rejilla
-        cx, cy = W / 2.0, H / 2.0
-        R = min(W / 2.0, H) * 0.92
-        sA, cA = math.sin(A), math.cos(A)
-        sB, cB = math.sin(B), math.cos(B)
-        lx, ly, lz = 0.0, 0.55, 0.83          # dirección de la luz (normalizada)
+        cols, rows = shutil.get_terminal_size((40, 16))
+        W, H = max(cols, 12), max(rows, 8)
+        if W != pW or H != pH:                 # limpia toda la pantalla al cambiar de tamaño
+            sys.stdout.write("\033[2J")
+            pW, pH = W, H
+        gW = max(W - INFO_W - 1, 10)
 
-        t = 0.06
+        zbuf = [-2.0] * (gW * H)
+        cbuf = [' '] * (gW * H)
+        col  = [''] * (gW * H)
+        cx, cy = gW / 2.0, H / 2.0
+        Rv = min(gW / (2.0 * ASPECT), H / 2.0) * 0.94
+        Rh = Rv * ASPECT
+        sB, cB = math.sin(B), math.cos(B)
+        lx, ly, lz = 0.0, 0.45, 0.89          # luz (sol)
+
+        t = 0.04
         while t < math.pi:
             st, ct = math.sin(t), math.cos(t)
-            parallel = (t % (math.pi / 6)) < 0.05
-            dphi = 0.03 / max(st, 0.15)
+            lat = 90.0 - math.degrees(t)
+            dphi = 0.025 / max(st, 0.12)
             f = 0.0
             while f < 2 * math.pi:
                 cp, sp = math.cos(f), math.sin(f)
                 x, y, z = st * cp, ct, st * sp
-                # rotar sobre Y
+                # girar sobre el eje (Y) → rotación de longitud
                 x1 =  x * cB + z * sB
                 z1 = -x * sB + z * cB
-                y1 =  y
-                # rotar sobre X
-                y2 = y1 * cA - z1 * sA
-                z2 = y1 * sA + z1 * cA
+                # inclinar (X)
+                y2 = y * cA - z1 * sA
+                z2 = y * sA + z1 * cA
                 x2 = x1
-                # proyección ortográfica (celdas ~2× más altas que anchas)
-                sx = int(cx + R * x2)
-                sy = int(cy - (R * 0.5) * y2)
-                if 0 <= sx < W and 0 <= sy < H:
-                    idx = sy * W + sx
+                sx = int(cx + Rh * x2)
+                sy = int(cy - Rv * y2)
+                if 0 <= sx < gW and 0 <= sy < H:
+                    idx = sy * gW + sx
                     if z2 > zbuf[idx]:
                         zbuf[idx] = z2
-                        lum = x2 * lx + y2 * ly + z2 * lz      # normal·luz
-                        meridian = (f % (math.pi / 6)) < dphi * 1.5
-                        if parallel or meridian:
-                            cbuf[idx] = 'o' if lum > 0 else '·'
-                            kind[idx] = 2
+                        lum = x2 * lx + y2 * ly + z2 * lz
+                        shade = max(0.0, min(1.0, lum * 0.5 + 0.5))
+                        lon = math.degrees(f)
+                        if lon > 180.0: lon -= 360.0
+                        if _is_land(lat, lon):
+                            cbuf[idx] = LAND_R[int(shade * (len(LAND_R) - 1))]
+                            col[idx]  = LAND_CL if lum > 0.15 else LAND_C
                         else:
-                            li = int((lum * 0.5 + 0.5) * (len(RAMP) - 1))
-                            cbuf[idx] = RAMP[max(0, min(len(RAMP) - 1, li))]
-                            kind[idx] = 1
+                            cbuf[idx] = SEA_R[int(shade * (len(SEA_R) - 1))]
+                            col[idx]  = SEA_CL if lum > 0.30 else SEA_C
                 f += dphi
-            t += 0.06
+            t += 0.04
 
+        info = info_lines()
+        i0 = max(0, (H - len(info)) // 2)
         out = []
         for yy in range(H):
-            line, cur = [], -1
-            base = yy * W
-            for xx in range(W):
+            line, cur = [], None
+            base = yy * gW
+            for xx in range(gW):
                 idx = base + xx
-                k = kind[idx]
-                if k != cur:
-                    line.append(GRID if k == 2 else (CYAN if k == 1 else RESET))
-                    cur = k
+                c = col[idx]
+                if c != cur:
+                    line.append(c if c else RESET); cur = c
                 line.append(cbuf[idx])
             line.append(RESET)
+            j = yy - i0
+            if 0 <= j < len(info):
+                line.append("  " + info[j] + RESET)
+            line.append("\033[K")          # borra hasta fin de línea → sin restos
             out.append(''.join(line))
-        sys.stdout.write("\033[H" + "\n".join(out))
+        sys.stdout.write("\033[H" + "\n".join(out) + "\033[J")
         sys.stdout.flush()
 
-        A += 0.04
-        B += 0.03
-        time.sleep(0.05)
+        B += 0.05
+        time.sleep(0.06)
 finally:
     _show()
