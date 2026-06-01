@@ -28,8 +28,11 @@ Dotfiles y configuración reproducible de mi Arch Linux riceado con estética **
    ```bash
    sudo pacman -S --needed - < packages/pkglist-native.txt
    ```
-4. AUR (necesita un helper como `paru`):
+4. AUR — primero instala el helper `paru` (no puede instalarse a sí mismo, por eso no está
+   en la lista), luego el resto:
    ```bash
+   sudo pacman -S --needed git base-devel
+   git clone https://aur.archlinux.org/paru.git /tmp/paru && (cd /tmp/paru && makepkg -si)
    paru -S --needed - < packages/pkglist-aur.txt
    ```
 5. (Opcional) BlackArch por categorías — ver `pentest/` y la guía.

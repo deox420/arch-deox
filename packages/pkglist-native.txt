@@ -1,6 +1,7 @@
 base
 base-devel
 bat
+blackarch-mirrorlist
 blueman
 bluez
 bluez-utils
@@ -14,6 +15,7 @@ eza
 fastfetch
 fd
 firefox
+fuse2
 fzf
 git
 grim
@@ -36,11 +38,12 @@ man-db
 man-pages
 nano
 neovim
-network-manager-applet
 networkmanager
+network-manager-applet
 nodejs
 npm
 pamixer
+paru
 pavucontrol
 pipewire
 pipewire-alsa
