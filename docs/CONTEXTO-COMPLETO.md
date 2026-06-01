@@ -1,0 +1,113 @@
+# CONTEXTO COMPLETO — arch-deox (punto de entrada para una sesión nueva)
+
+> **Empieza por aquí.** Este documento fusiona el trabajo de las DOS sesiones que montaron
+> el entorno: la **sesión terminal/sistema** (Fases A, B, D, E, F, G, H) y la **sesión
+> escritorio** (Fase C). Al 2026-06-01 el **plan A–H está COMPLETO y verificado**.
+> Detalle por sesión: `docs/HANDOFF-sesion-terminal.md`. Reglas del repo: `CLAUDE.md`.
+
+---
+
+## 0. Qué es esto
+Entorno **Arch Linux riceado y reproducible** (gestionado con **chezmoi**), estética
+**eDEX-UI / sci-fi**. Portátil Medion (Intel i5-1155G7, Iris Xe, eDP-1 1920x1080).
+Usuario `deox`, **nuevo en Arch → explicar todo en español**. Fuente chezmoi en
+`~/.local/share/chezmoi` (`.chezmoiroot = home`, rama git `main`).
+
+Capas independientes: **Hyprland** (compositor) · **deoxhud** (panel sci-fi a demanda) ·
+**Cate** (AppImage IA, opcional). Estética: **Catppuccin Mocha** en escritorio + **neón Tron**
+(cian/verde) en terminal.
+
+---
+
+## 1. Estado actual: PLAN A–H COMPLETO ✅
+
+| Fase | Qué | Estado |
+|------|-----|--------|
+| **A** | Repo chezmoi + git + estructura + CLAUDE/README/.chezmoiignore | ✅ |
+| **B** | Drivers Intel (vulkan-intel, intel-media-driver, libva-utils) + **paru** | ✅ |
+| **C** | Escritorio Catppuccin: Hyprland, Waybar, Rofi, Mako, wallpaper | ✅ |
+| **D** | Terminal eDEX: kitty/tmux/starship/fastfetch/cava + **deoxhud** | ✅ |
+| **E** | Sistema: neovim, fzf/rg/fd/bat/eza/zoxide, bluez, PPD; pkglists | ✅ |
+| **F** | Cate AppImage v1.1.0 + lanzador | ✅ |
+| **G** | BlackArch (capa) + kit curado 31 herramientas | ✅ |
+| **H** | Guía novatos + README reproducibilidad | ✅ |
+
+**Verificado:** `chezmoi status` vacío · `hyprctl configerrors` vacío · `systemctl --failed`
+ninguno · bluetooth/power-profiles-daemon/NetworkManager activos · `vainfo` OK · `deoxhud`
+levanta el layout · BlackArch repo + kit 31/31 · Cate abre · wallpaper activo.
+
+---
+
+## 2. Lo que hizo la SESIÓN ESCRITORIO (Fase C) — IMPORTANTE
+
+- **Hyprland está en `.conf` (hyprlang), NO en Lua.** Se migró a Lua y luego **se REVIRTIÓ**:
+  el modo Lua de Hyprland **0.55.2 rompe el IPC clásico** (clic en Waybar, `dispatch exec/exit`,
+  scripts externos → `return hl.dispatch(...)` peta). En `.conf` todo funciona. Config en
+  `home/dot_config/hypr/hyprland.conf`, sin `configerrors`.
+  - `togglesplit` no es dispatcher → se usa `layoutmsg, togglesplit`.
+  - **`windowrule` está deprecada/rota** en el parser `.conf` de 0.55.2 (`invalid field float`
+    con cualquier sintaxis) → se quitaron; sintaxis de reañadido documentada dentro del .conf.
+- **Waybar**: barra superior sólida, módulos en píldoras con icono+etiqueta, Catppuccin Mocha,
+  `persistent-workspaces: 5` (5 pestañas siempre visibles), módulo power-profiles-daemon,
+  menú de energía (`waybar/executable_power-menu.sh`).
+- **Rofi 2.0** (trae backend Wayland nativo; NO `rofi-wayland`): tema Catppuccin en
+  `rofi/config.rasi` + `rofi/catppuccin-mocha.rasi`, iconos **Papirus-Dark**. `$menu = rofi -show drun`.
+  - Gotcha: para usar `Tab` como cambio de modo hay que **liberar** `kb-element-next=""` y
+    `kb-element-prev=""` (si no, rofi muestra error de conflicto de teclas en su ventana).
+- **Mako**: `mako/config` Catppuccin (borde cian, críticas en rojo sin timeout). Recargar: `makoctl reload`.
+- **Wallpaper**: `~/Imágenes/wallpapers/rat-hacker.jpg` (fuera del repo, binario grande).
+  `hyprpaper.conf` se hizo **plantilla** (`hyprpaper.conf.tmpl` con `{{ .chezmoi.homeDir }}`)
+  porque **hyprpaper NO expande `~`** → con `~` no cargaba el fondo tras el relogin.
+
+---
+
+## 3. Lo que hizo la SESIÓN TERMINAL (A, B, D, E, F, G, H)
+Resumen (detalle en `HANDOFF-sesion-terminal.md`):
+- **deoxhud** (`~/.local/bin/{deoxhud,deoxhud-globe}`): dashboard tmux = globo-Tierra ASCII
+  girando + reloj/calendario ES + btop (config compacta `~/.config/deoxhud/btop-panel.conf`)
+  + terminal de trabajo. Layout adaptable con `tput` (btop nunca da "too small").
+  **Gotcha:** si la sesión tmux ya existe, **reconecta**; para rehacerla `tmux kill-session -t deoxhud`.
+- **paru** compilado **de fuente** (el `-bin` fallaba por `libalpm.so`). Hoy `paru` ya está en
+  el repo oficial `extra`.
+- **Sistema**: utilidades modernas (fzf/rg/fd/bat/eza/zoxide/tree) integradas en `.bashrc`;
+  bluez+blueman, pavucontrol, PPD.
+- **Cate**: AppImage v1.1.0 + `.desktop` (necesita fuse2).
+- **BlackArch**: `strap.sh` verificado por SHA1; kit curado de 31 tools en `pentest/`.
+
+---
+
+## 4. Reglas de trabajo (de CLAUDE.md) — RESPETAR SIEMPRE
+1. **Dotfiles en el repo PRIMERO** → `chezmoi diff` → mostrar → **confirmar** → `chezmoi apply`.
+2. **Confirmar antes de**: `sudo`, `pacman -S`, `paru -S`, `rm`, `git push`, `curl|sh`, instalar algo pesado.
+3. **`sudo` lo ejecuta el USUARIO** en su terminal (la sesión no tiene tty para la contraseña;
+   sugerir `!sudo …` o que lo corra él).
+4. `chezmoi apply` puede pedir TTY si un fichero se editó a mano → `chezmoi apply --force <ruta>`.
+5. **Cada sesión commitea solo sus ficheros**; commits locales, **`git push` solo si lo pide deox**.
+6. Base Arch **pura**; BlackArch solo como **capa por categorías** (nunca el meta-grupo).
+7. Explicar todo **en español**, cercano (usuario novato).
+
+## 5. Estructura del repo
+```
+~/.local/share/chezmoi/        (rama main)
+├── CLAUDE.md  README.md  .chezmoiignore  .gitignore
+├── home/                       # .chezmoiroot → $HOME
+│   ├── .chezmoiignore  dot_bashrc
+│   ├── dot_config/{hypr,waybar,rofi,mako,kitty,tmux,fastfetch,cava,deoxhud,starship.toml}
+│   └── dot_local/bin/{executable_deoxhud,executable_deoxhud-globe}
+├── packages/{pkglist-native.txt,pkglist-aur.txt}
+├── pentest/{categorias.txt,kit-curado.txt,install-kit.sh,README.md}
+└── docs/{CONTEXTO-COMPLETO.md (este), HANDOFF-sesion-terminal.md, GUIA-ARCH-PARA-NOVATOS.md}
+```
+
+## 6. Memoria (Claude) relacionada
+- `project-arch-deox` — estado y decisiones del proyecto.
+- `user-deox` — perfil del usuario (novato, español, portátil Intel).
+- `ref-aesthetic-goal` — meta estética final (Quickshell estilo ilyamiro/nixos-configuration).
+
+---
+
+## 7. PENDIENTE (decisión del usuario, fuera del plan base)
+- **git push**: hay commits locales en `main`, **sin remoto configurado** y sin `gh`. Para subir:
+  crear repo en GitHub, `git remote add origin <url>`, configurar auth (SSH o token), `git push -u origin main`.
+- **Evolución a Quickshell**: objetivo estético final (Quickshell + Hyprland, estilo
+  `github.com/ilyamiro/nixos-configuration`). Es un **proyecto aparte y grande**; abordar como nueva fase.
