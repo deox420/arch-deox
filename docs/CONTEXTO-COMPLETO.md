@@ -55,9 +55,14 @@ levanta el layout · BlackArch repo + kit 31/31 · Cate abre · wallpaper activo
   - Gotcha: para usar `Tab` como cambio de modo hay que **liberar** `kb-element-next=""` y
     `kb-element-prev=""` (si no, rofi muestra error de conflicto de teclas en su ventana).
 - **Mako**: `mako/config` Catppuccin (borde cian, críticas en rojo sin timeout). Recargar: `makoctl reload`.
-- **Wallpaper**: `~/Imágenes/wallpapers/rat-hacker.jpg` (fuera del repo, binario grande).
-  `hyprpaper.conf` se hizo **plantilla** (`hyprpaper.conf.tmpl` con `{{ .chezmoi.homeDir }}`)
-  porque **hyprpaper NO expande `~`** → con `~` no cargaba el fondo tras el relogin.
+- **Wallpaper**: `~/.local/share/wallpapers/rat-hacker.jpg` (fuera del repo; ruta sin acentos
+  y neutra de idioma). `hyprpaper.conf.tmpl` usa `{{ .chezmoi.homeDir }}` (hyprpaper NO expande `~`).
+  ⚠️ **Bug hyprpaper 0.8.4**: al arrancar detecta el monitor antes de precargar y NO pinta el
+  fondo (log "Monitor eDP-1 has no target"); no es la ruta/acentos/espacio (verificado con
+  config ASCII mínima) sino una carrera. **Fix**: el autostart usa `~/.local/bin/deox-wallpaper`
+  (arranca hyprpaper y reintenta `hyprctl hyprpaper wallpaper "eDP-1,RUTA"` —sin espacio— hasta
+  que `listactive` lo confirma). Para cambiar de fondo: copia otra imagen ahí y ajusta la ruta
+  en `hyprpaper.conf.tmpl` + `deox-wallpaper`.
 
 ---
 
