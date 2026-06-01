@@ -66,6 +66,7 @@ nodejs
 npm
 nuclei
 pamixer
+papirus-icon-theme
 paru
 paru-debug
 pavucontrol
