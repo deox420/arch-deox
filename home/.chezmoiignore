@@ -3,3 +3,8 @@
 #  quedan fuera automáticamente.)
 README.md
 .local/bin/__pycache__
+
+# Binarios grandes que viven FUERA del repo a propósito:
+Imágenes/        # wallpapers (hyprpaper apunta por ruta absoluta)
+Pictures/        # idem en sistemas en inglés
+Applications/    # Cate AppImage (experimental, fuera de dotfiles)

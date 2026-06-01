@@ -1,0 +1,13 @@
+# hyprpaper.conf — fondo de pantalla (arch-deox)
+# Plantilla chezmoi: {{ "{{ .chezmoi.homeDir }}" }} se sustituye por la ruta real
+# del HOME al aplicar. IMPORTANTE: hyprpaper NO expande "~", necesita ruta absoluta.
+# Doc: https://wiki.hypr.land/Hypr-Ecosystem/hyprpaper/
+#
+# Las imágenes viven en ~/Imágenes/wallpapers (fuera de chezmoi: son binarios grandes).
+# Para cambiar de fondo: descarga otra a esa carpeta y cambia las dos rutas de abajo.
+
+preload = {{ .chezmoi.homeDir }}/Imágenes/wallpapers/rat-hacker.jpg
+wallpaper = eDP-1, {{ .chezmoi.homeDir }}/Imágenes/wallpapers/rat-hacker.jpg
+
+splash = false
+ipc = on

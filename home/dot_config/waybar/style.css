@@ -1,0 +1,109 @@
+/* style.css — Waybar (arch-deox) · barra sólida con módulos en píldoras · Catppuccin Mocha */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font";
+    font-size: 13px;
+    font-weight: bold;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+
+/* Barra: franja sólida oscura con filo neón cian abajo */
+window#waybar {
+    background: #11111b;            /* Catppuccin crust */
+    color: #cdd6f4;
+    border-bottom: 2px solid #89dceb;
+}
+
+/* Cada módulo = una píldora separada (fondo base + redondeado + márgenes) */
+#window,
+#clock,
+#cpu,
+#memory,
+#temperature,
+#backlight,
+#pulseaudio,
+#network,
+#power-profiles-daemon,
+#battery,
+#custom-power {
+    background: #1e1e2e;           /* base */
+    border-radius: 8px;
+    padding: 0 12px;
+    margin: 4px 3px;
+}
+
+/* --- Escritorios --- */
+#workspaces {
+    margin: 4px 6px;
+}
+#workspaces button {
+    padding: 0 10px;
+    margin: 0 2px;
+    color: #6c7086;                /* inactivo */
+    background: #1e1e2e;
+    border-radius: 8px;
+}
+#workspaces button.active {
+    color: #11111b;
+    background: #89dceb;           /* activo: relleno cian neón */
+}
+#workspaces button.urgent {
+    color: #11111b;
+    background: #f38ba8;
+}
+#workspaces button:hover {
+    color: #cdd6f4;
+    background: #313244;
+}
+
+/* --- Ventana activa --- */
+#window { color: #a6adc8; }
+
+/* --- Reloj (centro), destacado en cian --- */
+#clock {
+    color: #89dceb;
+    background: #181825;           /* mantle, un pelín distinto */
+}
+
+/* --- Sistema: cada uno con su color Catppuccin para distinguirlos de un vistazo --- */
+#cpu          { color: #a6e3a1; }  /* verde */
+#memory       { color: #cba6f7; }  /* malva */
+#temperature  { color: #fab387; }  /* melocotón */
+#temperature.critical {
+    color: #11111b;
+    background: #f38ba8;           /* rojo de fondo si supera 85°C */
+}
+#backlight    { color: #f9e2af; }  /* amarillo */
+#pulseaudio   { color: #89b4fa; }  /* azul */
+#pulseaudio.muted { color: #6c7086; }
+#network      { color: #94e2d5; }  /* teal */
+#network.disconnected {
+    color: #11111b;
+    background: #f38ba8;
+}
+#power-profiles-daemon { color: #f5c2e7; }  /* rosa */
+#power-profiles-daemon.performance { color: #f38ba8; }  /* rojo: máx. potencia */
+#power-profiles-daemon.power-saver { color: #a6e3a1; }  /* verde: ahorro */
+
+#battery      { color: #a6e3a1; }
+#battery.warning  { color: #fab387; }
+#battery.critical {
+    color: #11111b;
+    background: #f38ba8;
+}
+#battery.charging { color: #a6e3a1; }
+
+/* --- Botón de energía --- */
+#custom-power {
+    color: #f38ba8;                /* rojo */
+}
+
+/* --- Bandeja del sistema --- */
+#tray {
+    background: #1e1e2e;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 4px 3px;
+}

@@ -1,1 +1,3 @@
+# pkglist-aur.txt — paquetes de AUR/foráneos (pacman -Qqm, sin -debug)
+# Regenerado: 2026-06-01 · reinstalar con: paru -S --needed - < pkglist-aur.txt
 tty-clock
