@@ -45,18 +45,31 @@ else
   globe_cmd='watch -t -c -n1 -- date "+%H:%M:%S%n%d/%m/%Y"'
 fi
 
-# --- Construye el layout (IDs de panel, robusto ante base-index) ---
-tmux new-session -d -s "$SESSION" -n hud
+# --- Tamaño REAL de la terminal (para que btop quepa siempre, no por % al vuelo) ---
+COLS=$(tput cols 2>/dev/null || echo 120)
+ROWS=$(tput lines 2>/dev/null || echo 40)
+
+# --- Construye el layout a ese tamaño (IDs de panel, robusto ante base-index) ---
+tmux new-session -d -s "$SESSION" -n hud -x "$COLS" -y "$ROWS"
 
 # Pane inicial (arriba-izquierda) → globo+reloj+calendario.
 p_globe=$(tmux list-panes -t "${SESSION}:hud" -F '#{pane_id}' | head -1)
 
-# Terminal de trabajo abajo (55% de alto, todo el ancho) → protagonista.
-# La fila superior se queda en ~45% para que btop tenga >=18 filas (su mínimo).
-p_term=$(tmux split-window -v -l 55% -t "$p_globe" -P -F '#{pane_id}')
+# Fila superior con ALTO suficiente para btop (mínimo 18 filas), sin pasar del 55%.
+top=22
+maxtop=$(( ROWS * 55 / 100 ))
+[ "$top" -gt "$maxtop" ] && top=$maxtop
+[ "$top" -lt 10 ] && top=10
+bottom=$(( ROWS - top - 1 ))
+[ "$bottom" -lt 6 ] && bottom=6
 
-# Fila superior: btop a la derecha (58% del ancho), globo a la izquierda (42%).
-p_btop=$(tmux split-window -h -l 58% -t "$p_globe" -P -F '#{pane_id}')
+# Terminal de trabajo abajo (todo el ancho) → protagonista.
+p_term=$(tmux split-window -v -l "$bottom" -t "$p_globe" -P -F '#{pane_id}')
+
+# btop a la derecha; ancho ~58% pero al menos 60 columnas (mínimo de btop) si caben.
+bw=$(( COLS * 58 / 100 ))
+[ "$bw" -lt 60 ] && [ "$COLS" -gt 72 ] && bw=60
+p_btop=$(tmux split-window -h -l "$bw" -t "$p_globe" -P -F '#{pane_id}')
 
 # btop con config compacta del panel (sin lista de procesos → cabe en poco alto).
 btop_cfg="$HOME/.config/deoxhud/btop-panel.conf"
