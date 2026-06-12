@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# proyector — gestiona la salida HDMI/externa para ponencias (Hyprland).
+# Uso:
+#   proyector            -> muestra estado de monitores
+#   proyector espejo     -> clona tu pantalla en el proyector (mismo contenido)
+#   proyector extender   -> escritorio extendido (proyector a la derecha)
+#   proyector off        -> apaga la salida externa
+#
+# El monitor interno es eDP-1; cualquier otro (HDMI-A-1, DP-1...) se trata como externo.
+
+set -euo pipefail
+INTERNA="eDP-1"
+
+aviso() { command -v notify-send >/dev/null && notify-send -t 3000 "Proyector" "$1" || true; echo ">> $1"; }
+
+# Detecta el primer monitor externo CONECTADO (excluye el interno)
+externo() {
+  hyprctl monitors 2>/dev/null | awk '/^Monitor /{print $2}' | grep -v "^${INTERNA}$" | head -1
+}
+
+estado() {
+  echo "== Monitores actuales =="
+  hyprctl monitors 2>/dev/null | awk '/^Monitor /{name=$2} /^\t[0-9]+x[0-9]+/{print "  "name": "$1}'
+}
+
+case "${1:-estado}" in
+  espejo|mirror|clonar)
+    EXT="$(externo)"; [ -z "$EXT" ] && { aviso "No detecto proyector conectado. Enchufa el HDMI."; exit 1; }
+    # Clona: la salida externa replica eDP-1 (resolución preferida del proyector)
+    hyprctl keyword monitor "${EXT},preferred,auto,1,mirror,${INTERNA}"
+    aviso "Espejo activo en ${EXT} (clonando ${INTERNA})"
+    ;;
+  extender|extend)
+    EXT="$(externo)"; [ -z "$EXT" ] && { aviso "No detecto proyector conectado. Enchufa el HDMI."; exit 1; }
+    hyprctl keyword monitor "${EXT},preferred,auto-right,1"
+    aviso "Escritorio extendido: ${EXT} a la derecha de ${INTERNA}"
+    ;;
+  off|apagar|desconectar)
+    EXT="$(externo)"; [ -z "$EXT" ] && { aviso "No hay salida externa activa."; exit 0; }
+    hyprctl keyword monitor "${EXT},disable"
+    aviso "Salida externa ${EXT} apagada"
+    ;;
+  estado|status|*)
+    estado
+    ;;
+esac
