@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Menú de energía para Waybar (arch-deox), con wofi.
+# Menú de energía para Waybar (arch-deox), con rofi (el mismo lanzador de siempre).
 opt=$(printf "  Bloquear\n  Cerrar sesión\n  Suspender\n  Reiniciar\n  Apagar" \
-    | wofi --dmenu --prompt "Energía" --width 260 --height 260 --cache-file /dev/null)
+    | rofi -dmenu -i -p "Energía" -theme-str 'window { width: 280px; } listview { lines: 5; }')
 
 case "$opt" in
     *Bloquear*)      hyprlock ;;

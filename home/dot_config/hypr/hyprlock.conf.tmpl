@@ -7,10 +7,11 @@ general {
     hide_cursor = true
 }
 
-# Fondo: el wallpaper con desenfoque + capa oscura Catppuccin.
+# Fondo: TU wallpaper (el mismo del escritorio) con desenfoque + capa oscura.
+# Plantilla chezmoi: la ruta del HOME se rellena al aplicar (hyprlock no expande "~").
 background {
     monitor =
-    path = /usr/share/hypr/wall1.png
+    path = {{ .chezmoi.homeDir }}/.local/share/wallpapers/rat-hacker.jpg
     blur_passes = 3
     blur_size = 7
     color = rgba(1e1e2eff)

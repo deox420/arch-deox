@@ -10,7 +10,6 @@
 set -u
 
 WP="${1:-$HOME/.local/share/wallpapers/rat-hacker.jpg}"
-MON="eDP-1"
 
 # Arranca el daemon si no está vivo (lee hyprpaper.conf → precarga la imagen).
 if ! pgrep -x hyprpaper >/dev/null 2>&1; then
@@ -18,9 +17,10 @@ if ! pgrep -x hyprpaper >/dev/null 2>&1; then
 fi
 
 # Reintenta aplicar el fondo por IPC (sin espacio tras la coma: hyprpaper es estricto).
+# Monitor vacío antes de la coma = TODOS los monitores (también proyector/externo).
 # La precarga puede tardar; reintentamos ~12 s y confirmamos que queda activo.
 for _ in $(seq 1 30); do
-  hyprctl hyprpaper wallpaper "${MON},${WP}" >/dev/null 2>&1
+  hyprctl hyprpaper wallpaper ",${WP}" >/dev/null 2>&1
   if hyprctl hyprpaper listactive 2>/dev/null | grep -qF "$WP"; then
     exit 0
   fi

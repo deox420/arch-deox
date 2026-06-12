@@ -15,7 +15,7 @@
     "hyprland/workspaces": {
         "format": "{id}",
         "on-click": "activate",
-        "sort-by-number": true,
+        "sort-by": "number",
         // Muestra SIEMPRE 5 pestañas (escritorios), aunque estén vacías.
         "persistent-workspaces": {
             "*": 5
