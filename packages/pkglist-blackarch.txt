@@ -1,0 +1,17 @@
+# pkglist-blackarch.txt — explícitos del repo BLACKARCH (instalar DESPUÉS de strap.sh)
+# Regenerado: 2026-06-12 con update-lists.sh · reinstalar: sudo pacman -S --needed - < pkglist-blackarch.txt
+amass
+blackarch-mirrorlist
+burpsuite
+dnsrecon
+enum4linux
+feroxbuster
+ffuf
+hashid
+netexec
+nuclei
+paru
+responder
+seclists
+subfinder
+whatweb
