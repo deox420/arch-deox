@@ -72,8 +72,9 @@ Resumen (detalle en `HANDOFF-sesion-terminal.md`):
   girando + reloj/calendario ES + btop (config compacta `~/.config/deoxhud/btop-panel.conf`)
   + terminal de trabajo. Layout adaptable con `tput` (btop nunca da "too small").
   **Gotcha:** si la sesión tmux ya existe, **reconecta**; para rehacerla `tmux kill-session -t deoxhud`.
-- **paru** compilado **de fuente** (el `-bin` fallaba por `libalpm.so`). Hoy `paru` ya está en
-  el repo oficial `extra`.
+- **paru** compilado **de fuente** (el `-bin` fallaba por `libalpm.so`). OJO: paru NO está
+  en repos oficiales; está en el repo **blackarch** (verificado 2026-06-12). En máquina limpia:
+  clonar de AUR + `makepkg -si` (como dice el README).
 - **Sistema**: utilidades modernas (fzf/rg/fd/bat/eza/zoxide/tree) integradas en `.bashrc`;
   bluez+blueman, pavucontrol, PPD.
 - **Cate**: AppImage v1.1.0 + `.desktop` (necesita fuse2).
@@ -111,7 +112,23 @@ Resumen (detalle en `HANDOFF-sesion-terminal.md`):
 
 ---
 
-## 7. PENDIENTE (decisión del usuario, fuera del plan base)
+## 7. Mantenimiento 2026-06-12 (auditoría completa del repo)
+Sesión de revisión: bugs corregidos y mejoras aplicadas (commits `9715bb7..`):
+- **Sincronización repo↔sistema**: el exec-once de `dbus-update-activation-environment` y el
+  bind SUPER+SHIFT+P (modo-ponencia) solo vivían en el sistema → ya en el repo. Versionados
+  `modo-ponencia` y `proyector` (estaban huérfanos en `~/.local/bin`). `system/` commiteado.
+- **Agente polkit**: faltaba su exec-once (apps gráficas con privilegios fallaban en silencio).
+- **hyprlock** ahora es `.tmpl` y usa el wallpaper propio (antes un PNG genérico).
+- **Multi-monitor**: mako sin `output=eDP-1`; `deox-wallpaper` aplica a todos los monitores.
+- **Waybar**: `sort-by-number` (deprecado) → `sort-by: number`. **power-menu**: wofi → rofi.
+- **Paquetes**: listas separadas por origen (`pkglist-native/blackarch/aur`) con
+  `packages/update-lists.sh`; antes la nativa mezclaba 15 paquetes de blackarch y rompía la
+  reinstalación limpia. `install-kit.sh`: `-Sy` → `-Syu` (evita partial upgrade).
+- **Portapapeles**: cliphist + wl-clip-persist (SUPER+CTRL+V = historial con rofi).
+- **Nuevos paquetes**: qt5/qt6-wayland, gvfs, tumbler, thunar-volman, noto-fonts(+emoji),
+  bash-completion, cliphist, wl-clip-persist, ufw (firewall deny-in/allow-out), greetd+tuigreet.
+
+## 8. PENDIENTE (decisión del usuario, fuera del plan base)
 - **git push**: hay commits locales en `main`, **sin remoto configurado** y sin `gh`. Para subir:
   crear repo en GitHub, `git remote add origin <url>`, configurar auth (SSH o token), `git push -u origin main`.
 - **Evolución a Quickshell**: objetivo estético final (Quickshell + Hyprland, estilo
