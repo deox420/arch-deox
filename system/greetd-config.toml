@@ -3,8 +3,8 @@
 # greetd es un daemon de login minimalista. Lanza "tuigreet" (una pantalla de
 # login en MODO TEXTO, estilo terminal sci-fi) en la VT1 nada más arrancar.
 #
-# Este fichero NO lo aplica chezmoi (vive en /etc, no en tu home). Para usarlo:
-#   sudo install -Dm644 ~/.local/share/chezmoi/system/greetd-config.toml /etc/greetd/config.toml
+# Este fichero vive en /etc, no en tu home. Lo aplica scripts/20-login-manager.sh:
+#   sudo install -Dm644 system/greetd-config.toml /etc/greetd/config.toml
 #   sudo systemctl enable greetd.service
 #   (reinicia)
 #

@@ -1,3 +1,16 @@
-# pkglist-aur.txt — foráneos/AUR (pacman -Qqem, sin -debug)
-# Regenerado: 2026-06-12 con update-lists.sh · reinstalar: paru -S --needed - < pkglist-aur.txt
-tty-clock
+# pkglist-aur.txt — paquetes de AUR (helper: shelly o paru).
+# ---------------------------------------------------------------------------
+# caelestia-cli es la pieza central: instala y gestiona el shell Caelestia y
+# arrastra sus dependencias (quickshell, etc.). El resto son extras opcionales.
+#
+# Reinstalar:  shelly -S --needed - < pkglist-aur.txt
+#          (o) paru   -S --needed - < pkglist-aur.txt
+# ---------------------------------------------------------------------------
+
+# --- Caelestia (shell Quickshell sobre Hyprland) ---
+caelestia-cli
+
+# --- Extras opcionales (descomenta lo que quieras) ---
+# obsidian            # notas
+# obs-studio          # grabación/streaming
+# spotify             # música (Caelestia trae tema spicetify opcional)
