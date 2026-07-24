@@ -21,9 +21,10 @@ Usuario `deox`, nuevo en Arch/CachyOS.
 5. **Family-friendly:** el usuario es nuevo. Explica lo que haces, **en español**, cercano.
 
 ## Estructura
-- `scripts/` → arranque por pasos: `00-post-install` (sistema+drivers Intel),
-  `10-caelestia` (helper AUR + caelestia-cli + `caelestia install`),
-  `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/ufw/servicios).
+- `scripts/` → `bootstrap.sh` (monta todo de un tirón) + pasos: `00-post-install`
+  (sistema+drivers Intel), `10-caelestia` (helper AUR + caelestia-cli + `caelestia install`),
+  `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/ufw/servicios),
+  `40-snapshots` (snapshots Btrfs/snapper + rollback), `50-backup` (copia de datos personales).
 - `packages/` → `pkglist-native.txt` (complementos oficiales) y `pkglist-aur.txt`
   (caelestia-cli + extras). `update-lists.sh` **audita** (no regenera) las listas.
 - `overrides/` → ajustes personales que Caelestia respeta (Hyprland `user.conf`, wallpaper).

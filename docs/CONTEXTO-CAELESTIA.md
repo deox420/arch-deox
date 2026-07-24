@@ -32,7 +32,9 @@ Todo lo anterior queda intacto en la rama `main` y el historial git (recuperable
 3. **greetd + tuigreet** = pantalla de login (Caelestia no trae gestor de login).
 
 ## 3. Estado actual del repo
-- `scripts/` — 4 scripts idempotentes, interactivos, en español (00→10→20→30).
+- `scripts/` — scripts idempotentes, interactivos, en español: `bootstrap.sh` (orquestador,
+  reconstrucción exprés) + `00→10→20→30` + `40-snapshots` (Btrfs/snapper + rollback) +
+  `50-backup` (copia externa de datos personales).
 - `packages/pkglist-native.txt` — complementos oficiales (drivers Intel, greetd, brillo/sensores,
   red/ufw, utilidades de terminal, grim/slurp). **No** es la lista completa: el grueso lo pone
   Caelestia.
@@ -58,6 +60,15 @@ Todo lo anterior queda intacto en la rama `main` y el historial git (recuperable
 2. **Confirmar antes de**: `sudo`, `pacman -S`, `shelly/paru -S`, `rm`, `git push`, `curl|sh`.
 3. `sudo` lo ejecuta el **usuario** en su terminal (la sesión no tiene tty para la contraseña).
 4. Sin secretos en commits. Explicar todo **en español**, cercano (usuario novato).
+
+## 5b. Reconstrucción exprés / volver atrás (CachyOS Btrfs)
+Objetivo del usuario: poder cambiar/reinstalar rápido y sin miedo. Enfoque:
+- **Sistema desechable** → se rehace con `scripts/bootstrap.sh` (encadena 00→10→…→40).
+- **Rollback de actualización rota** → CachyOS/Btrfs hace snapshot automático antes de cada
+  `pacman` (snapper + snap-pac + limine-snapper-sync). Reiniciar → elegir Snapshot en el menú
+  de arranque → `sudo snapper rollback`. `40-snapshots.sh` lo verifica/completa.
+- **Datos personales** (no cubiertos por snapshots ante fallo de disco) → copia externa con
+  `50-backup.sh` (rsync de una lista curada de carpetas de $HOME).
 
 ## 6. Pendiente / ideas
 - Ajustar `overrides/hypr-user.conf` a la ruta real de override tras `caelestia install`

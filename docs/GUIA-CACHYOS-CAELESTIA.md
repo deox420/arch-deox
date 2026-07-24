@@ -94,6 +94,42 @@ Al volver deberías ver el login de tuigreet; entra y arrancará Hyprland con el
 
 ---
 
+## Atajo: montar todo de un tirón
+Si no quieres ir script a script, hay un orquestador que encadena los pasos 3→6 preguntándote
+en cada bloque:
+```bash
+bash scripts/bootstrap.sh
+```
+Es idempotente: si algo se queda a medias, lo relanzas y sigue.
+
+## Reconstruir exprés y VOLVER ATRÁS
+La gracia de esto es no tenerle miedo a romper el sistema:
+
+- **Rehacer el entorno** (equipo como nuevo): reinstala CachyOS o borra y vuelve a lanzar
+  `bash scripts/bootstrap.sh`. En minutos tienes otra vez tu escritorio.
+- **Deshacer una actualización que rompió algo** (CachyOS con Btrfs, lo normal): NO reinstalas
+  nada. CachyOS hace un *snapshot* automático antes de cada `pacman`. Entonces:
+  1. Reinicia.
+  2. En el menú de arranque elige **Snapshots** y uno que funcionara.
+  3. Ya dentro, abre terminal:  `sudo snapper rollback`  y reinicia. Ese estado bueno se queda.
+
+  Prepara/comprueba esto con:
+  ```bash
+  bash scripts/40-snapshots.sh      # verifica snapper/snap-pac/limine-snapper-sync
+  btrfs-assistant                   # gestión visual de snapshots
+  ```
+- **Protegerte de un fallo de disco** (los snapshots viven en el mismo disco): copia tus datos
+  a un USB u otro disco:
+  ```bash
+  bash scripts/50-backup.sh /run/media/deox/MI-USB/backup
+  # restaurar:  bash scripts/50-backup.sh --restore /run/media/deox/MI-USB/backup
+  ```
+
+> Regla mental: **el sistema es desechable** (se reconstruye con el repo), **tus datos no**
+> (esos van a copia externa). Con eso, cambiar/reinstalar deja de dar miedo.
+
+---
+
 ## Comprobaciones rápidas (si algo va raro)
 ```bash
 hyprctl configerrors     # errores de configuración de Hyprland (debe estar vacío)

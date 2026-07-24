@@ -18,13 +18,26 @@ paquetes + ajustes personales para dejar el portátil listo tras una instalació
 
 | Carpeta | Contenido |
 |---|---|
-| `scripts/` | Arranque por pasos: `00-post-install` (sistema + drivers Intel), `10-caelestia` (helper AUR + `caelestia-cli` + `caelestia install`), `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/firewall/servicios). |
+| `scripts/` | `bootstrap.sh` (monta todo de un tirón) y arranque por pasos: `00-post-install` (sistema + drivers Intel), `10-caelestia` (helper AUR + `caelestia-cli` + `caelestia install`), `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/firewall/servicios), `40-snapshots` (snapshots + rollback), `50-backup` (copia de datos personales). |
 | `packages/` | `pkglist-native.txt` (complementos de repos oficiales), `pkglist-aur.txt` (caelestia-cli + extras). `update-lists.sh` audita las listas contra lo instalado. |
 | `overrides/` | Ajustes personales que Caelestia respeta: `hypr-user.conf` (monitor, teclado, Intel) y wallpaper. |
 | `system/` | `greetd-config.toml` (config del login, va a `/etc/greetd/`). |
 | `docs/` | `CONTEXTO-CAELESTIA.md` (empieza aquí) y `GUIA-CACHYOS-CAELESTIA.md` (paso a paso para novatos). |
 
-## Reproducir desde cero (resumen)
+## Reconstrucción exprés (de un comando)
+
+Tras instalar CachyOS, para dejar el equipo listo en el menor número de pasos:
+```bash
+git clone https://github.com/deox420/arch-deox.git && cd arch-deox
+bash scripts/bootstrap.sh      # encadena 00→10→(caelestia install)→20→30→40, preguntando
+```
+`bootstrap.sh` es interactivo e idempotente: puedes relanzarlo si algo se quedó a medias.
+
+**Volver atrás** si una actualización rompe algo: en CachyOS con Btrfs los snapshots ya son
+automáticos → reinicia, elige un *Snapshot* en el menú de arranque y `sudo snapper rollback`
+(ver `scripts/40-snapshots.sh`). Para un fallo de disco, copia externa con `scripts/50-backup.sh`.
+
+## Reproducir desde cero (paso a paso)
 
 1. **Instala CachyOS** con su ISO (instalador Calamares): elige NetworkManager y un perfil
    mínimo o Hyprland. Arranca en el sistema nuevo y conéctate a internet.
