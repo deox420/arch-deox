@@ -1,47 +1,42 @@
 #!/usr/bin/env bash
-# update-lists.sh — regenera las listas de paquetes de arch-deox SEPARADAS POR ORIGEN.
+# update-lists.sh — AUDITORÍA de paquetes (no destructiva).
+# ---------------------------------------------------------------------------
+# Antes este script REGENERABA las listas con 'pacman -Qqe'. Ya no: en el modelo
+# CachyOS + Caelestia el grueso del escritorio lo instala 'caelestia install',
+# así que pkglist-native.txt / pkglist-aur.txt son listas CURADAS a mano (solo
+# complementos). Regenerarlas mecánicamente las llenaría de ruido.
 #
-# Por qué: una sola lista con `pacman -Qqe` mezcla paquetes de repos oficiales,
-# de BlackArch y de AUR. En una máquina recién instalada eso ROMPE el paso
-# "pacman -S < lista" (BlackArch aún no está habilitado y los de AUR no existen
-# en pacman). Separadas, cada lista se instala en su momento.
-#
-# Uso:  ./update-lists.sh   (desde cualquier sitio; escribe junto a este script)
+# En su lugar, esto solo COMPARA lo que tienes instalado con lo que hay en las
+# listas y te avisa de las diferencias, para que decidas tú qué añadir/quitar.
+# No escribe nada. Uso:  ./update-lists.sh
+# ---------------------------------------------------------------------------
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
-FECHA="$(date +%F)"
+
+lista() { grep -vE '^\s*#|^\s*$' "$1" 2>/dev/null | sort -u; }
+
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
-# Explícitos nativos (instalados desde algún repo) y foráneos (AUR/manuales).
-pacman -Qqen | sort > "$TMP/explicit"
-pacman -Qqem | grep -v -- '-debug$' | sort > "$TMP/aur"   # sin paquetes -debug
+# Explícitos nativos (repos) y foráneos (AUR), sin paquetes -debug.
+pacman -Qqen | sort -u > "$TMP/nat_sys"
+pacman -Qqem | grep -v -- '-debug$' | sort -u > "$TMP/aur_sys"
+lista "$DIR/pkglist-native.txt" > "$TMP/nat_list"
+lista "$DIR/pkglist-aur.txt"    > "$TMP/aur_list"
 
-# Qué ofrece cada grupo de repos (multilib puede no estar habilitado).
-pacman -Slq core extra multilib 2>/dev/null | sort -u > "$TMP/oficial" || true
-pacman -Slq blackarch 2>/dev/null | sort -u > "$TMP/blackarch" || : > "$TMP/blackarch"
+sec() { printf '\n\033[1;36m== %s ==\033[0m\n' "$*"; }
 
-# Reparto: oficial / blackarch / desconocido (se avisa y se deja en la nativa).
-comm -12 "$TMP/explicit" "$TMP/oficial"   > "$TMP/nativos"
-comm -23 "$TMP/explicit" "$TMP/oficial"   > "$TMP/resto"
-comm -12 "$TMP/resto"    "$TMP/blackarch" > "$TMP/black"
-comm -23 "$TMP/resto"    "$TMP/blackarch" > "$TMP/desconocidos"
+sec "En la lista NATIVA pero NO instalados"
+comm -23 "$TMP/nat_list" "$TMP/nat_sys" | sed 's/^/  /' || true
 
-if [ -s "$TMP/desconocidos" ]; then
-  echo "[!] Paquetes explícitos que no encuentro en ningún repo (los dejo en la nativa):" >&2
-  sed 's/^/      /' "$TMP/desconocidos" >&2
-  cat "$TMP/desconocidos" >> "$TMP/nativos"; sort -o "$TMP/nativos" "$TMP/nativos"
-fi
+sec "Instalados (nativos explícitos) que NO están en la lista"
+echo "  (revísalos: quizá alguno merezca entrar en pkglist-native.txt)"
+comm -13 "$TMP/nat_list" "$TMP/nat_sys" | sed 's/^/  /' || true
 
-{ echo "# pkglist-native.txt — explícitos de repos OFICIALES (pacman -Qqen, sin BlackArch)"
-  echo "# Regenerado: $FECHA con update-lists.sh · reinstalar: sudo pacman -S --needed - < pkglist-native.txt"
-  cat "$TMP/nativos"; } > "$DIR/pkglist-native.txt"
+sec "En la lista AUR pero NO instalados"
+comm -23 "$TMP/aur_list" "$TMP/aur_sys" | sed 's/^/  /' || true
 
-{ echo "# pkglist-blackarch.txt — explícitos del repo BLACKARCH (instalar DESPUÉS de strap.sh)"
-  echo "# Regenerado: $FECHA con update-lists.sh · reinstalar: sudo pacman -S --needed - < pkglist-blackarch.txt"
-  cat "$TMP/black"; } > "$DIR/pkglist-blackarch.txt"
+sec "Instalados (AUR) que NO están en la lista"
+comm -13 "$TMP/aur_list" "$TMP/aur_sys" | sed 's/^/  /' || true
 
-{ echo "# pkglist-aur.txt — foráneos/AUR (pacman -Qqem, sin -debug)"
-  echo "# Regenerado: $FECHA con update-lists.sh · reinstalar: paru -S --needed - < pkglist-aur.txt"
-  cat "$TMP/aur"; } > "$DIR/pkglist-aur.txt"
-
-echo "OK · nativos: $(grep -vc '^#' "$DIR/pkglist-native.txt") · blackarch: $(grep -vc '^#' "$DIR/pkglist-blackarch.txt") · aur: $(grep -vc '^#' "$DIR/pkglist-aur.txt")"
+echo
+echo "Nada se ha modificado. Edita las listas a mano según lo de arriba."

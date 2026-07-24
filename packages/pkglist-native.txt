@@ -1,116 +1,49 @@
-# pkglist-native.txt — explícitos de repos OFICIALES (pacman -Qqen, sin BlackArch)
-# Regenerado: 2026-06-12 con update-lists.sh · reinstalar: sudo pacman -S --needed - < pkglist-native.txt
-aircrack-ng
-asciinema
-base
-base-devel
-bash-completion
-bat
-bettercap
-binwalk
-blueman
-bluez
-bluez-utils
-brightnessctl
-btop
-cava
-chezmoi
-cliphist
-cmatrix
-docker
-docker-compose
-efibootmgr
-exploitdb
-eza
-fastfetch
-fd
-firefox
-fuse2
-fzf
-git
-github-cli
-gobuster
+# pkglist-native.txt — COMPLEMENTOS de repos oficiales (CachyOS/Arch).
+# ---------------------------------------------------------------------------
+# OJO: esto NO es la lista completa del sistema. El grueso del escritorio lo
+# instala 'caelestia install' (hyprland, fish, foot, quickshell, thunar, temas
+# gtk/qt, pipewire, cliphist, fuentes noto, etc. — ver su manifest.toml).
+# Aquí van solo: drivers/hardware, login, firewall y utilidades que Caelestia
+# NO garantiza pero querrás igual.
+#
+# Reinstalar:  sudo pacman -S --needed - < pkglist-native.txt
+# ---------------------------------------------------------------------------
+
+# --- Hardware / vídeo (portátil Medion · Intel Iris Xe) ---
+vulkan-intel
+intel-media-driver
+libva-utils
+intel-ucode
+
+# --- Login (greetd + tuigreet, ver scripts/20-login-manager.sh) ---
 greetd
 greetd-tuigreet
-grim
-gst-plugin-pipewire
-gvfs
-hashcat
-htop
-hydra
-hypridle
-hyprland
-hyprlock
-hyprpaper
-intel-media-driver
-intel-ucode
-john
-kitty
-less
-libpulse
-libva-utils
-linux
-linux-firmware
-mako
-man-db
-man-pages
-masscan
-metasploit
-nano
-neovim
+
+# --- Brillo / sensores (Caelestia los usa para sus widgets) ---
+brightnessctl
+ddcutil
+lm_sensors
+
+# --- Red / firewall ---
 networkmanager
 network-manager-applet
-nikto
-nmap
-nodejs
-noto-fonts
-noto-fonts-emoji
-npm
-obsidian
-obs-studio
-pamixer
-papirus-icon-theme
-pavucontrol
-pipewire
-pipewire-alsa
-pipewire-jack
-pipewire-pulse
-polkit-kde-agent
-power-profiles-daemon
-qt5-wayland
-qt6-wayland
-ripgrep
-rofi
-rustscan
-slurp
-sof-firmware
-sqlmap
-starship
-sudo
-tcpdump
-thunar
-thunar-volman
-tmux
-tor
-torbrowser-launcher
-tree
-ttf-jetbrains-mono-nerd
-tumbler
 ufw
-unzip
-vim
-vulkan-intel
-waybar
-wget
-wifite
-wireplumber
-wireshark-qt
-wl-clipboard
-wl-clip-persist
-wofi
-wpa_supplicant
-wpscan
-xdg-desktop-portal-hyprland
-yazi
+
+# --- Utilidades de terminal (por si no vienen con el perfil elegido) ---
+git
+neovim
+fzf
+ripgrep
+fd
+bat
+eza
 zoxide
-zram-generator
+tree
+unzip
+wget
+man-db
+man-pages
+
+# --- Capturas de pantalla (útiles en Hyprland) ---
+grim
+slurp
