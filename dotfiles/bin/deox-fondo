@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# deox-fondo — pone el fondo de pantalla del tema activo (o el que le pases).
+#   deox-fondo                 usa el fondo del tema actual
+#   deox-fondo ~/Imágenes/x.jpg usa esa imagen (y lo recuerda)
+set -uo pipefail
+DATOS="$HOME/.local/share/kali-deox"
+PROPIO="$DATOS/fondo-propio"
+
+if [ -n "${1:-}" ]; then
+  [ -f "$1" ] || { echo "No existe: $1" >&2; exit 1; }
+  realpath "$1" > "$PROPIO"
+fi
+
+img=""
+[ -f "$PROPIO" ] && img="$(cat "$PROPIO")"
+if [ -z "$img" ] || [ ! -f "$img" ]; then
+  tema="$(cat "$DATOS/tema-actual" 2>/dev/null || echo kali-glitch)"
+  img="$(sed -n 's/^wallpaper="\{0,1\}\([^"]*\)"\{0,1\}.*/\1/p' "$DATOS/temas/$tema.tema" 2>/dev/null | head -1)"
+fi
+[ -f "$img" ] || img="/usr/share/backgrounds/kali-16x9/kali-glitch.jpg"
+
+pkill -x swaybg 2>/dev/null
+exec swaybg -m fill -i "$img"

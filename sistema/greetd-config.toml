@@ -1,0 +1,18 @@
+# /etc/greetd/config.toml — login de kali-deox (lo instala scripts/25-login.sh)
+# ---------------------------------------------------------------------------
+# greetd es un gestor de login minimalista; tuigreet dibuja la pantalla en
+# modo texto. Atajos en el login: F2 = elegir comando, F3 = elegir sesión
+# (Hyprland, o XFCE/KDE si los instalaste), F12 = apagar/reiniciar.
+# ---------------------------------------------------------------------------
+
+[terminal]
+# Terminal virtual donde aparece el login.
+vt = 1
+
+[default_session]
+# --time / --remember / --remember-session: reloj, recuerda usuario y sesión.
+# --asterisks: muestra * al teclear. --cmd: sesión por defecto (Hyprland 0.57
+# se lanza con 'start-hyprland', el envoltorio oficial).
+command = "tuigreet --time --remember --remember-session --asterisks --greeting 'kali-deox :: try harder' --cmd start-hyprland"
+# En Kali/Debian el usuario del greeter se llama "_greetd" (no "greeter").
+user = "_greetd"

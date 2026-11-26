@@ -1,67 +1,41 @@
 #!/usr/bin/env bash
-# bootstrap.sh — RECONSTRUCCIÓN EXPRÉS: monta todo el entorno de un tirón.
-# ---------------------------------------------------------------------------
-# Tras una instalación limpia de CachyOS (o para rehacer el entorno), esto
-# encadena los pasos en orden y te va preguntando. Objetivo: dejar el portátil
-# listo con el menor número de comandos.
-#
-#     git clone https://github.com/deox420/arch-deox.git
-#     cd arch-deox
-#     bash scripts/bootstrap.sh
-#
-# Es interactivo e idempotente: puedes relanzarlo si algo se quedó a medias.
-# ---------------------------------------------------------------------------
-set -euo pipefail
+# bootstrap.sh — monta kali-deox de un tirón sobre un Kali recién instalado.
+# Encadena los pasos en orden y te pregunta en cada uno (puedes saltar
+# cualquiera y relanzar cuando quieras: todo es idempotente).
+#   bash scripts/bootstrap.sh
+source "$(dirname "$0")/lib.sh"
+no_root; exigir_kali
 
-DIR="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$DIR"
+cat <<'TXT'
+=============================================================
+   kali-deox · montaje completo
+   1) 10-sistema     repos, actualización, drivers Intel, español
+   2) 20-escritorio  Hyprland + Waybar + Rofi + Kitty + login
+   3) 30-hacking     herramientas (metapaquete + extras)
+   4) 40-seguridad   cortafuegos, AppArmor, aviso semanal
+   5) 50-snapshots   volver atrás si algo se rompe
+   6) 60-copia       restaurar tus datos de CachyOS
+   Cada instalación se audita contra vulnerabilidades conocidas.
+   Registro: ~/.local/state/kali-deox/instalacion.log
+=============================================================
+TXT
+hay_red || aviso "No llego a http.kali.org: revisa la conexión antes de seguir."
+ask "¿Empezamos?" || exit 0
 
-titulo() { printf '\n\033[1;35m########  %s  ########\033[0m\n' "$*"; }
-ask()    { read -rp "$(printf '\033[1;33m%s [s/N] \033[0m' "$1")" r; [[ "$r" =~ ^[sSyY]$ ]]; }
-
-if [ "$(id -u)" -eq 0 ]; then
-  echo "No me ejecutes como root. Córrelo como tu usuario (ya pediré sudo donde toque)." >&2
-  exit 1
+titulo "1 · Sistema";      ask "¿Ejecuto 10-sistema.sh?"    && bash "$REPO/scripts/10-sistema.sh"
+titulo "2 · Escritorio";   ask "¿Ejecuto 20-escritorio.sh?" && bash "$REPO/scripts/20-escritorio.sh"
+titulo "3 · Hacking";      ask "¿Ejecuto 30-hacking.sh?"    && bash "$REPO/scripts/30-hacking.sh"
+titulo "4 · Seguridad";    ask "¿Ejecuto 40-seguridad.sh?"  && bash "$REPO/scripts/40-seguridad.sh"
+titulo "5 · Snapshots";    ask "¿Ejecuto 50-snapshots.sh?"  && bash "$REPO/scripts/50-snapshots.sh"
+titulo "6 · Tus datos"
+if ask "¿Restauro la copia que hiciste en CachyOS?"; then
+  read -rp "   Ruta de la carpeta kali-deox-migracion: " ruta
+  bash "$REPO/scripts/60-copia.sh" --restaurar "$ruta"
 fi
 
-cat <<'EOF'
-=============================================================
-  arch-deox · reconstrucción exprés (CachyOS + Caelestia)
-  Voy a ejecutar, en orden y preguntándote en cada bloque:
-    1) scripts/00-post-install.sh   (sistema + drivers Intel)
-    2) scripts/10-caelestia.sh      (helper AUR + caelestia-cli)
-       -> luego TÚ lanzas:  caelestia install
-    3) scripts/20-login-manager.sh  (greetd + tuigreet)
-    4) scripts/30-extras.sh         (AUR / firewall / bluetooth)
-    5) scripts/40-snapshots.sh      (snapshots + rollback)
-  Puedes decir N a cualquier bloque y saltarlo.
-=============================================================
-EOF
-ask "¿Empezamos?" || { echo "Cancelado."; exit 0; }
+cat <<'TXT'
 
-titulo "PASO 1 · sistema + drivers"
-ask "¿Ejecuto 00-post-install.sh?" && bash scripts/00-post-install.sh
-
-titulo "PASO 2 · Caelestia"
-ask "¿Ejecuto 10-caelestia.sh?" && bash scripts/10-caelestia.sh
-echo
-echo "  >> AHORA, a mano y en interactivo:   caelestia install"
-echo "     (elige componentes: hypr, fish, foot, fonts, gtk, qt, auth, network,"
-echo "      bluetooth, pipewire, clipboard, tools...)"
-read -rp "  Pulsa Enter cuando 'caelestia install' haya terminado (o para saltar)... " _
-
-titulo "PASO 3 · login"
-ask "¿Ejecuto 20-login-manager.sh?" && bash scripts/20-login-manager.sh
-
-titulo "PASO 4 · extras"
-ask "¿Ejecuto 30-extras.sh?" && bash scripts/30-extras.sh
-
-titulo "PASO 5 · snapshots / rollback"
-ask "¿Ejecuto 40-snapshots.sh?" && bash scripts/40-snapshots.sh
-
-titulo "PASO 6 · tus overrides"
-echo "  Copia tus ajustes personales siguiendo overrides/README.md"
-echo "  (monitor eDP-1, teclado ES, Intel). Luego:  hyprctl reload"
-
-echo
-echo "== Reconstrucción terminada. Revisa y reinicia cuando quieras (reboot). =="
+== ¡Listo! Reinicia (sudo reboot). En el login pulsa Enter → Hyprland. ==
+   Primeros atajos: SUPER+Enter terminal · SUPER+D apps · SUPER+F1 chuleta
+   Cambiar colores: SUPER+T · Seguridad: deox-auditar
+TXT

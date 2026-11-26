@@ -1,0 +1,182 @@
+#!/usr/bin/python3 -I
+# deox-auditar — ¿lo que tengo (o voy a instalar) tiene vulnerabilidades conocidas?
+# ---------------------------------------------------------------------------
+# Cruza tus paquetes con el Debian Security Tracker (Kali hereda de Debian) y
+# te dice, en cristiano:
+#   [ACTUALIZA YA]   hay un arreglo de seguridad YA disponible en los repos de Kali
+#                    y tú tienes una versión vieja → sudo apt full-upgrade
+#   [EN CAMINO]      Debian ya lo arregló pero aún no ha llegado a Kali (suele
+#                    tardar días). No puedes hacer nada salvo actualizar a menudo.
+#   [SIN PARCHE]     CVE conocido que nadie ha arreglado todavía (informativo).
+#
+# Uso:
+#   deox-auditar                       audita lo instalado
+#   deox-auditar --simular PAQ [PAQ…]  audita lo que instalaría 'apt install PAQ…'
+#                                      (acepta 'paquete-' para excluir, como apt)
+#   deox-auditar --resumen             una línea (para la barra / notificaciones)
+#   deox-auditar --actualizar-datos    fuerza descargar el tracker de nuevo
+# Códigos de salida: 0 = nada que hacer · 2 = hay [ACTUALIZA YA] · 1 = error.
+# Datos: https://security-tracker.debian.org/tracker/data/json (caché 6 h).
+# ---------------------------------------------------------------------------
+import json, os, re, subprocess, sys, time, urllib.request
+
+URL = "https://security-tracker.debian.org/tracker/data/json"
+CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
+                     "kali-deox", "debian-security-tracker.json")
+MAX_EDAD = 6 * 3600
+IGNORAR_URGENCIA = {"unimportant", "end-of-life"}
+
+try:
+    import apt_pkg
+except ImportError:
+    sys.exit("Falta python3-apt:  sudo apt install python3-apt")
+apt_pkg.init()
+
+
+def tracker(forzar=False):
+    if forzar or not os.path.exists(CACHE) or time.time() - os.path.getmtime(CACHE) > MAX_EDAD:
+        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+        print("· Descargando datos del Debian Security Tracker…", file=sys.stderr)
+        tmp = CACHE + ".tmp"
+        try:
+            with urllib.request.urlopen(URL, timeout=120) as r, open(tmp, "wb") as f:
+                while True:
+                    trozo = r.read(1 << 20)
+                    if not trozo:
+                        break
+                    f.write(trozo)
+            json.load(open(tmp))  # validar antes de sustituir
+            os.replace(tmp, CACHE)
+        except Exception as e:  # sin red: usar la caché vieja si hay
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            if not os.path.exists(CACHE):
+                sys.exit(f"No pude descargar el tracker ({e}) y no hay caché.")
+            print(f"  (sin conexión: uso datos de {time.ctime(os.path.getmtime(CACHE))})", file=sys.stderr)
+    return json.load(open(CACHE))
+
+
+def paquetes_instalados():
+    """{fuente: (version_fuente_instalada, version_fuente_candidata)}"""
+    cache = apt_pkg.Cache(progress=None)
+    dep = apt_pkg.DepCache(cache)
+    rec = apt_pkg.PackageRecords(cache)
+    res = {}
+    for p in cache.packages:
+        v = p.current_ver
+        if not v:
+            continue
+        cand = dep.get_candidate_ver(p) or v
+        fila = []
+        for ver in (v, cand):
+            rec.lookup(ver.file_list[0])
+            src, sver = rec.source_pkg or p.name, rec.source_ver or ver.ver_str
+            fila.append((src, sver))
+        (s, inst), (_, cnd) = fila
+        prev = res.get(s)
+        if prev is None or apt_pkg.version_compare(inst, prev[0]) < 0:
+            res[s] = (inst, cnd)
+    return res
+
+
+def paquetes_simulados(args):
+    """Lo que instalaría 'apt-get install args' → {fuente: (version, version)}"""
+    out = subprocess.run(["apt-get", "install", "-s", "-q", *args],
+                         capture_output=True, text=True, env={**os.environ, "LC_ALL": "C"})
+    if out.returncode != 0:
+        sys.exit("apt no puede resolver la instalación:\n" + out.stdout[-2000:] + out.stderr[-2000:])
+    cache = apt_pkg.Cache(progress=None)
+    rec = apt_pkg.PackageRecords(cache)
+    res = {}
+    for m in re.finditer(r"^Inst (\S+) (?:\[\S+\] )?\((\S+) ", out.stdout, re.M):
+        nombre, ver = m.group(1), m.group(2)
+        src, sver = nombre, ver
+        try:
+            pkg = cache[nombre.split(":")[0]]
+            for v in pkg.version_list:
+                if v.ver_str == ver:
+                    rec.lookup(v.file_list[0])
+                    src, sver = rec.source_pkg or nombre, rec.source_ver or ver
+                    break
+        except KeyError:
+            pass
+        res[src] = (sver, sver)
+    return res
+
+
+def auditar(paqs, dst):
+    ya, camino, sinparche = [], [], {}
+    for src, (inst, cand) in sorted(paqs.items()):
+        for cve, info in dst.get(src, {}).items():
+            rel = info.get("releases", {})
+            r = rel.get("sid") or rel.get("forky")
+            if not r:
+                continue
+            urg = r.get("urgency", "")
+            if r.get("status") == "resolved":
+                fv = r.get("fixed_version") or "0"
+                if fv == "0" or apt_pkg.version_compare(inst, fv) >= 0:
+                    continue
+                destino = ya if apt_pkg.version_compare(cand, fv) >= 0 else camino
+                destino.append((src, inst, cand, fv, cve))
+            elif r.get("status") == "open" and urg not in IGNORAR_URGENCIA:
+                sinparche.setdefault(src, []).append(cve)
+    return ya, camino, sinparche
+
+
+def agrupar(lista):
+    g = {}
+    for src, inst, cand, fv, cve in lista:
+        e = g.setdefault(src, [inst, cand, fv, []])
+        if apt_pkg.version_compare(fv, e[2]) > 0:
+            e[2] = fv
+        e[3].append(cve)
+    return g
+
+
+def main():
+    a = sys.argv[1:]
+    forzar = "--actualizar-datos" in a
+    a = [x for x in a if x != "--actualizar-datos"]
+    resumen = "--resumen" in a
+    a = [x for x in a if x != "--resumen"]
+    if a and a[0] in ("-h", "--help"):
+        print(open(__file__).read().split("# ----")[1].split("\n", 1)[1]); return 0
+    dst = tracker(forzar)
+    if a and a[0] == "--simular":
+        if len(a) < 2:
+            sys.exit("Uso: deox-auditar --simular paquete [paquete…]")
+        paqs, modo = paquetes_simulados(a[1:]), "a instalar"
+    else:
+        paqs, modo = paquetes_instalados(), "instalados"
+    ya, camino, sinparche = auditar(paqs, dst)
+    gy, gc = agrupar(ya), agrupar(camino)
+    if resumen:
+        print(f"{len(gy)} por actualizar · {len(gc)} en camino · {len(sinparche)} sin parche")
+        return 2 if gy else 0
+
+    print(f"\n== Auditoría de seguridad: {len(paqs)} paquetes fuente {modo} ==")
+    print(f"   (datos del tracker: {time.ctime(os.path.getmtime(CACHE))})\n")
+    if gy:
+        print(f"\033[1;31m[ACTUALIZA YA]\033[0m {len(gy)} paquetes tienen el arreglo ya en Kali:")
+        for s, (i, c, f, cves) in sorted(gy.items()):
+            print(f"   {s:28s} tienes {i}  →  arreglo {f}  ({len(cves)} CVE)")
+        print("   → Ejecuta:  sudo apt update && sudo apt full-upgrade\n")
+    else:
+        print("\033[1;32m[OK]\033[0m Nada pendiente que dependa de ti.\n")
+    if gc:
+        print(f"\033[1;33m[EN CAMINO]\033[0m {len(gc)} paquetes: Debian ya lo arregló, aún no ha llegado a Kali:")
+        for s, (i, c, f, cves) in sorted(gc.items(), key=lambda x: -len(x[1][3])):
+            print(f"   {s:28s} {i}  (arreglo en Debian: {f}, {len(cves)} CVE)")
+        print("   → Llegará con las actualizaciones normales. Actualiza a menudo.\n")
+    if sinparche:
+        top = sorted(sinparche.items(), key=lambda x: -len(x[1]))[:10]
+        total = sum(len(v) for v in sinparche.values())
+        print(f"[SIN PARCHE] {total} CVE abiertos en {len(sinparche)} paquetes (nadie los ha arreglado aún).")
+        print("   Los que más: " + ", ".join(f"{s} ({len(v)})" for s, v in top))
+        print("   Detalle: https://security-tracker.debian.org/tracker/source-package/<paquete>\n")
+    return 2 if gy else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

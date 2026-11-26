@@ -1,0 +1,50 @@
+# hacking-extra.txt — herramientas que NO trae kali-linux-default y que merecen
+# la pena (todas de los repos oficiales de Kali, sin compilar nada a mano).
+# (lo instala scripts/30-hacking.sh, después del metapaquete elegido)
+
+# --- Reconocimiento / web moderno (ProjectDiscovery y cía) ---
+rustscan
+nuclei
+subfinder
+httpx-toolkit
+katana
+naabu
+dnsx
+feroxbuster
+gobuster
+ffuf
+caido
+seclists
+
+# --- Directorio Activo / Windows ---
+netexec
+bloodhound
+bloodhound-ce-python
+certipy-ad
+evil-winrm
+enum4linux-ng
+smbmap
+
+# --- Pivoting / túneles ---
+ligolo-ng
+chisel
+sshuttle
+proxychains4
+
+# --- Exploiting / reversing ---
+python3-pwntools
+gef
+ghidra
+rizin-cutter          # (radare2 lo trae ya kali-linux-default; no lo duplicamos)
+
+# --- Secretos y código ---
+trufflehog
+gitleaks
+
+# --- Utilidades ---
+cyberchef
+mitmproxy
+rlwrap
+tmux
+openvpn
+wireguard-tools

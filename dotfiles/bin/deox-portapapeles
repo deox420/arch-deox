@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# deox-portapapeles — historial del portapapeles con rofi (SUPER + C).
+set -euo pipefail
+sel="$(cliphist list | rofi -dmenu -p "  portapapeles")" || exit 0
+[ -n "$sel" ] && printf '%s' "$sel" | cliphist decode | wl-copy

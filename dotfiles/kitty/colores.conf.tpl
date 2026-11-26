@@ -1,0 +1,30 @@
+# colores.conf — GENERADO por deox-tema (@@nombre@@). No editar a mano.
+foreground            #@@fg@@
+background            #@@bg@@
+selection_foreground  #@@bg@@
+selection_background  #@@accent2@@
+cursor                #@@accent2@@
+url_color             #@@accent@@
+active_border_color   #@@accent@@
+inactive_border_color #@@bg3@@
+active_tab_foreground   #@@bg@@
+active_tab_background   #@@accent@@
+inactive_tab_foreground #@@fg_dim@@
+inactive_tab_background #@@bg2@@
+
+color0  #@@bg2@@
+color8  #@@bg3@@
+color1  #@@err@@
+color9  #@@err@@
+color2  #@@ok@@
+color10 #@@ok@@
+color3  #@@warn@@
+color11 #@@warn@@
+color4  #@@accent@@
+color12 #@@accent@@
+color5  #@@magenta@@
+color13 #@@magenta@@
+color6  #@@accent2@@
+color14 #@@accent2@@
+color7  #@@fg_dim@@
+color15 #@@fg@@
