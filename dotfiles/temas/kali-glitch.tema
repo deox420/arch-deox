@@ -1,0 +1,15 @@
+# Tema "kali-glitch" (por defecto) — azul eléctrico + cian, inspirado en el
+# fondo oficial kali-glitch. Colores en hex SIN '#'. Lo aplica:  deox-tema kali-glitch
+nombre="kali-glitch"
+bg="0a0e1f"        # fondo principal
+bg2="111833"       # superficies (barra, menús)
+bg3="1f2b5c"       # bordes inactivos, selección suave
+fg="e6ecff"        # texto
+fg_dim="8b98c9"    # texto secundario
+accent="2f6bff"    # azul Kali
+accent2="00d4ff"   # cian
+ok="3ddc84"        # verde
+warn="ffcc66"      # amarillo
+err="ff5470"       # rojo
+magenta="c77dff"
+wallpaper="/usr/share/backgrounds/kali-16x9/kali-glitch.jpg"

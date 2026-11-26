@@ -1,0 +1,80 @@
+/* ~/.config/waybar/style.css — los colores vienen de colores.css (deox-tema). */
+@import "colores.css";
+
+* {
+    font-family: "JetBrains Mono", "Symbols Nerd Font", "Font Awesome 7 Free", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+
+window#waybar {
+    background: alpha(@bg, 0.72);
+    color: @fg;
+    border: 1px solid alpha(@accent, 0.45);
+    border-radius: 12px;
+}
+
+tooltip {
+    background: @bg2;
+    border: 1px solid @accent;
+    border-radius: 8px;
+}
+tooltip label { color: @fg; }
+
+#custom-kali {
+    color: @accent2;
+    font-size: 17px;
+    padding: 0 12px 0 14px;
+}
+
+#workspaces { margin: 4px 2px; }
+#workspaces button {
+    color: @fg_dim;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: transparent;
+}
+#workspaces button.active {
+    color: @bg;
+    background: linear-gradient(90deg, @accent, @accent2);
+}
+#workspaces button.urgent { color: @err; }
+#workspaces button:hover { background: alpha(@accent, 0.25); }
+
+#window { color: @fg_dim; padding: 0 10px; }
+
+#clock {
+    color: @accent2;
+    font-weight: bold;
+    padding: 0 12px;
+}
+
+#custom-objetivo,
+#custom-vpn,
+#network, #cpu, #memory, #temperature, #backlight,
+#wireplumber, #battery, #tray, #custom-apagar {
+    padding: 0 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    background: alpha(@bg2, 0.85);
+}
+
+#custom-objetivo        { color: @err; }
+#custom-objetivo.vacio  { color: @fg_dim; }
+#custom-vpn             { color: @ok; }
+#custom-vpn.desconectada{ color: @fg_dim; }
+#network                { color: @accent2; }
+#network.disconnected   { color: @err; }
+#cpu                    { color: @accent; }
+#memory                 { color: @magenta; }
+#temperature            { color: @warn; }
+#temperature.critical   { color: @err; }
+#backlight              { color: @warn; }
+#wireplumber            { color: @accent2; }
+#wireplumber.muted      { color: @fg_dim; }
+#battery                { color: @ok; }
+#battery.warning        { color: @warn; }
+#battery.critical       { color: @err; }
+#custom-apagar          { color: @err; margin-right: 6px; }

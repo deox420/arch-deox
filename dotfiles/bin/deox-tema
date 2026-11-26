@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# deox-tema — cambia los colores de TODO el escritorio de una vez.
+#   deox-tema <nombre>   aplica un tema (kali-glitch, kali-noche, tron, catppuccin…)
+#   deox-tema --lista    muestra los temas disponibles
+#   deox-tema --menu     elige con rofi (atajo SUPER + T)
+#   deox-tema --actual   dice qué tema está puesto
+# Lee los temas de ~/.local/share/kali-deox/temas y las plantillas *.tpl de
+# ~/.local/share/kali-deox/plantillas, y escribe el resultado en ~/.config.
+set -euo pipefail
+
+DATOS="${KALI_DEOX_DATOS:-$HOME/.local/share/kali-deox}"
+TEMAS="$DATOS/temas"
+PLANTILLAS="$DATOS/plantillas"
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
+ESTADO="$DATOS/tema-actual"
+CLAVES=(nombre bg bg2 bg3 fg fg_dim accent accent2 ok warn err magenta wallpaper)
+
+lista() { find "$TEMAS" -maxdepth 1 -name '*.tema' -printf '%f\n' 2>/dev/null | sed 's/\.tema$//' | sort; }
+
+case "${1:-}" in
+  --lista)  lista; exit 0 ;;
+  --actual) cat "$ESTADO" 2>/dev/null || echo "kali-glitch"; exit 0 ;;
+  --menu)
+    elegido="$(lista | rofi -dmenu -p "  tema" || true)"
+    [ -n "$elegido" ] || exit 0
+    exec "$0" "$elegido" ;;
+  ""|-h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+esac
+
+TEMA="$1"
+FICHERO="$TEMAS/$TEMA.tema"
+[ -f "$FICHERO" ] || { echo "No existe el tema '$TEMA'. Disponibles:"; lista; exit 1; }
+
+# Leer el tema SIN ejecutarlo (solo líneas clave="valor"), por seguridad.
+declare -A T=()
+while IFS= read -r linea; do
+  linea="${linea%%#*}"
+  [[ "$linea" =~ ^[[:space:]]*([a-z_0-9]+)=\"?([^\"]*)\"?[[:space:]]*$ ]] || continue
+  T["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+done < "$FICHERO"
+
+for k in "${CLAVES[@]}"; do
+  [ -n "${T[$k]:-}" ] || { echo "El tema '$TEMA' no define '$k'." >&2; exit 1; }
+  if [ "$k" != nombre ] && [ "$k" != wallpaper ] && ! [[ "${T[$k]}" =~ ^[0-9a-fA-F]{6}$ ]]; then
+    echo "Color no válido en $k='${T[$k]}' (usa 6 cifras hex sin #)." >&2; exit 1
+  fi
+done
+if [ ! -f "${T[wallpaper]}" ]; then
+  echo "Aviso: no encuentro el fondo ${T[wallpaper]} (¿falta kali-wallpapers-2026?)." >&2
+fi
+
+# Rellenar cada plantilla: dotfiles/<app>/<fichero>.tpl → ~/.config/<app>/<fichero>
+render() {
+  local tpl="$1" destino="$2" sed_args=() k v
+  for k in "${CLAVES[@]}"; do
+    v="${T[$k]//\\/\\\\}"; v="${v//|/\\|}"; v="${v//&/\\&}"
+    sed_args+=(-e "s|@@${k}@@|${v}|g")
+  done
+  mkdir -p "$(dirname "$destino")"
+  sed "${sed_args[@]}" "$tpl" > "$destino.tmp" && mv "$destino.tmp" "$destino"
+}
+
+n=0
+while IFS= read -r -d '' tpl; do
+  rel="${tpl#"$PLANTILLAS"/}"
+  render "$tpl" "$CONF/${rel%.tpl}"
+  n=$((n + 1))
+done < <(find "$PLANTILLAS" -type f -name '*.tpl' -print0)
+echo "$TEMA" > "$ESTADO"
+
+# Recargar en caliente lo que esté abierto (si no lo está, no pasa nada).
+if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  hyprctl reload >/dev/null 2>&1 || true
+  pkill -SIGUSR2 -x waybar 2>/dev/null || true
+  makoctl reload 2>/dev/null || true
+  pkill -SIGUSR1 -x kitty 2>/dev/null || true
+  deox-fondo >/dev/null 2>&1 &
+  notify-send -a kali-deox "Tema: $TEMA" "Colores aplicados ($n ficheros)" 2>/dev/null || true
+fi
+echo "Tema '$TEMA' aplicado ($n ficheros)."

@@ -1,73 +1,63 @@
-# arch-deox
+# kali-deox
 
-Kit **reproducible** para montar mi escritorio sobre **CachyOS** con el shell **Caelestia**
-(Quickshell sobre Hyprland). No son dotfiles sueltos: es el guion de arranque + listas de
-paquetes + ajustes personales para dejar el portátil listo tras una instalación limpia.
+Kit **reproducible** para mi portátil (Medion, Intel Iris Xe): **Kali Linux** con todas las
+herramientas de hacking ético y un escritorio **bonito y personalizable** — Hyprland con
+barra, lanzador, notificaciones, pantalla de bloqueo y temas de color intercambiables.
 
-- **Base del sistema:** [CachyOS](https://cachyos.org) (Arch optimizado, kernel `linux-cachyos`)
-- **Escritorio:** [Caelestia](https://github.com/caelestia-dots/caelestia) — barra, launcher,
-  notificaciones, lockscreen y wallpaper, gestionado con `caelestia-cli`
-- **Compositor:** Hyprland (lo configura Caelestia) · **Terminal:** foot + fish
-- **Login:** greetd + tuigreet · **Hardware de referencia:** portátil Medion, Intel Iris Xe
+Incluye el **instalador de migración** desde mi CachyOS anterior: copia verificada y cifrada
+de mis datos, ISO de Kali con la firma oficial comprobada y pendrive grabado sin riesgo.
 
-> **Antes** esto era un rice eDEX-UI con chezmoi (Waybar/Rofi/Mako + kitty Tron + `deoxhud` +
-> capa pentest/BlackArch). Se migró a CachyOS + Caelestia. Lo anterior sigue en la rama `main`
-> y en el historial git por si quieres recuperar algo.
+| | |
+|---|---|
+| **Sistema** | [Kali Linux](https://www.kali.org) rolling (base Debian testing) |
+| **Escritorio** | Hyprland 0.57 (config en **Lua**) · Waybar · Rofi · Mako · Hyprlock/Hypridle · wlogout |
+| **Terminal** | Kitty + zsh (el de Kali) + Starship + fastfetch |
+| **Login** | greetd + tuigreet (modo texto) |
+| **Temas** | `kali-glitch` (defecto) · `kali-noche` · `tron` · `catppuccin` — `SUPER+T` |
+| **Hacking** | `kali-linux-default` o `-large` + extras modernos (netexec, bloodhound, ligolo-ng, nuclei, caido…) |
+| **Seguridad** | Cada instalación se **audita** contra CVEs conocidos (`deox-auditar`), ufw, AppArmor, aviso semanal |
+
+## Empezar
+
+**Estoy en CachyOS** (preparar el salto):
+```bash
+cd ~/arch-deox && git pull     # o clónalo si no lo tienes
+bash migrar.sh                 # copia → ISO verificada → USB → instrucciones
+```
+
+**Ya estoy en Kali** (montar todo):
+```bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/deox420/arch-deox.git ~/kali-deox && cd ~/kali-deox
+bash migrar.sh                 # detecta Kali y lanza scripts/bootstrap.sh
+```
+
+Paso a paso para novatos: **[docs/GUIA-KALI.md](docs/GUIA-KALI.md)** ·
+Atajos: **[docs/ATAJOS.md](docs/ATAJOS.md)** · Seguridad: **[docs/SEGURIDAD.md](docs/SEGURIDAD.md)**
 
 ## Estructura
 
 | Carpeta | Contenido |
 |---|---|
-| `scripts/` | `bootstrap.sh` (monta todo de un tirón) y arranque por pasos: `00-post-install` (sistema + drivers Intel), `10-caelestia` (helper AUR + `caelestia-cli` + `caelestia install`), `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/firewall/servicios), `40-snapshots` (snapshots + rollback), `50-backup` (copia de datos personales). |
-| `packages/` | `pkglist-native.txt` (complementos de repos oficiales), `pkglist-aur.txt` (caelestia-cli + extras). `update-lists.sh` audita las listas contra lo instalado. |
-| `overrides/` | Ajustes personales que Caelestia respeta: `hypr-user.conf` (monitor, teclado, Intel) y wallpaper. |
-| `system/` | `greetd-config.toml` (config del login, va a `/etc/greetd/`). |
-| `docs/` | `CONTEXTO-CAELESTIA.md` (empieza aquí) y `GUIA-CACHYOS-CAELESTIA.md` (paso a paso para novatos). |
+| `migrar.sh` | Punto de entrada único: en CachyOS prepara la migración; en Kali monta el entorno. |
+| `migracion/` | `migrar-desde-cachyos.sh`: copia de datos (sha256 + secretos cifrados AES-256), descarga de la ISO con verificación GPG, grabación segura del USB. |
+| `scripts/` | `bootstrap.sh` y los pasos `10-sistema` · `20-escritorio` (+`25-login`) · `30-hacking` · `40-seguridad` · `50-snapshots` · `60-copia` · `instalar-dotfiles.sh` · `lib.sh`. |
+| `dotfiles/` | Configuración del escritorio: `hypr/` (Lua), `waybar/`, `rofi/`, `mako/`, `kitty/`, `wlogout/`, `fastfetch/`, `zsh/`, `temas/`, `bin/` (scripts `deox-*`). Los `*.tpl` son plantillas que rellena `deox-tema`. |
+| `packages/` | `base.txt` · `escritorio.txt` · `hacking-extra.txt` (verificados contra el repo de Kali). |
+| `sistema/` | `greetd-config.toml` (va a `/etc/greetd/`). |
+| `tests/` | `verificar.sh`: revisa scripts, JSON, temas y la config de Hyprland antes de cada commit. |
+| `docs/` | Guía para novatos, atajos y política de seguridad. |
 
-## Reconstrucción exprés (de un comando)
+## Personalizar
 
-Tras instalar CachyOS, para dejar el equipo listo en el menor número de pasos:
-```bash
-git clone https://github.com/deox420/arch-deox.git && cd arch-deox
-bash scripts/bootstrap.sh      # encadena 00→10→(caelestia install)→20→30→40, preguntando
-```
-`bootstrap.sh` es interactivo e idempotente: puedes relanzarlo si algo se quedó a medias.
+- **Colores:** `SUPER+T` o `deox-tema tron`. Crea el tuyo copiando un `dotfiles/temas/*.tema`.
+- **Fondo:** `deox-fondo ~/Imágenes/mi-fondo.jpg`.
+- **Hyprland:** tus cambios en `~/.config/hypr/usuario.lua` (nunca se sobrescribe).
+- **Modo "versionado":** `bash scripts/instalar-dotfiles.sh --enlazar` → editas en el repo y
+  haces commit.
 
-**Volver atrás** si una actualización rompe algo: en CachyOS con Btrfs los snapshots ya son
-automáticos → reinicia, elige un *Snapshot* en el menú de arranque y `sudo snapper rollback`
-(ver `scripts/40-snapshots.sh`). Para un fallo de disco, copia externa con `scripts/50-backup.sh`.
+> **Historia:** antes fue un rice eDEX-UI sobre Arch (rama `main`, historial git) y luego
+> CachyOS + Caelestia. Se migró a Kali por decisión del usuario; todo lo anterior sigue en git.
 
-## Reproducir desde cero (paso a paso)
-
-1. **Instala CachyOS** con su ISO (instalador Calamares): elige NetworkManager y un perfil
-   mínimo o Hyprland. Arranca en el sistema nuevo y conéctate a internet.
-2. **Clona este repo:**
-   ```bash
-   git clone https://github.com/deox420/arch-deox.git && cd arch-deox
-   ```
-3. **Base del sistema + drivers Intel:**
-   ```bash
-   bash scripts/00-post-install.sh
-   ```
-4. **Caelestia** (helper AUR + `caelestia-cli`), y luego el despliegue interactivo:
-   ```bash
-   bash scripts/10-caelestia.sh
-   caelestia install        # elige componentes: hypr, fish, foot, temas, etc.
-   ```
-5. **Login** greetd + tuigreet:
-   ```bash
-   bash scripts/20-login-manager.sh
-   ```
-6. **Extras opcionales** (AUR, firewall ufw, bluetooth):
-   ```bash
-   bash scripts/30-extras.sh
-   ```
-7. **Tus ajustes personales:** copia `overrides/` a las rutas que indica
-   [`overrides/README.md`](overrides/README.md) y **reinicia**.
-
-> ¿Nuevo en esto? Lee **[docs/GUIA-CACHYOS-CAELESTIA.md](docs/GUIA-CACHYOS-CAELESTIA.md)**.
-
-## Reglas del repo
-Ver [CLAUDE.md](CLAUDE.md). Resumen: el repo es un **kit de instalación** (los dotfiles los
-gestiona `caelestia install`, no chezmoi); confirmar antes de `sudo`/instalar/`push`; sin
-secretos; tweaks personales en `overrides/`; explicar todo en español.
+Reglas del repo: [CLAUDE.md](CLAUDE.md). ⚖ Herramientas solo contra sistemas propios o con
+permiso por escrito.

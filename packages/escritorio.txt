@@ -1,0 +1,64 @@
+# escritorio.txt — el escritorio kali-deox: Hyprland + Waybar + Rofi + Mako + Kitty.
+# (lo instala scripts/20-escritorio.sh)
+
+# --- Compositor y su ecosistema ---
+hyprland
+xwayland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+hyprlock
+hypridle
+hyprpicker
+hyprpolkitagent
+hyprland-guiutils
+qt6-wayland
+qt6ct
+
+# --- Barra, lanzador, notificaciones, apagado, fondo ---
+waybar
+rofi
+mako-notifier
+libnotify-bin
+wlogout
+swaybg
+
+# --- Terminal y shell ---
+kitty
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+starship
+
+# --- Login (pantalla de entrada en modo texto) ---
+greetd
+tuigreet
+
+# --- Portapapeles y capturas ---
+wl-clipboard
+cliphist
+grim
+slurp
+swappy
+wf-recorder
+
+# --- Aspecto: fuentes, iconos, cursor, temas GTK ---
+fonts-jetbrains-mono
+fonts-nerd-symbols
+fonts-font-awesome
+fonts-noto-color-emoji
+papirus-icon-theme
+bibata-cursor-theme
+adw-gtk3-kali
+nwg-look
+kali-wallpapers-2026
+
+# --- Apps de escritorio ---
+# (mpv y udiskie se quitaron tras la auditoría: CVEs pendientes en Kali y no son
+#  imprescindibles. Thunar ya monta USBs con un clic.)
+thunar
+thunar-archive-plugin
+gvfs
+tumbler
+imv
+zathura
+firefox-esr

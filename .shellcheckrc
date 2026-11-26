@@ -1,0 +1,4 @@
+# Avisos que no aplican a este repo:
+#  SC2088: "~" en textos que solo se MUESTRAN al usuario (no son rutas).
+#  SC1091: lib.sh se carga con ruta calculada en tiempo de ejecución.
+disable=SC2088,SC1091

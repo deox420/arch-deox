@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# deox-atajos — chuleta de atajos de teclado (SUPER + F1).
+rofi -dmenu -i -p "  atajos" -no-custom <<'LISTA' >/dev/null
+SUPER + Enter            Terminal (kitty)
+SUPER + D                Lanzador de apps (incluye el menú de herramientas de Kali)
+SUPER + E                Archivos (Thunar)
+SUPER + B                Navegador (Firefox)
+SUPER + Q                Cerrar ventana
+SUPER + F                Pantalla completa
+SUPER + V                Ventana flotante / mosaico
+SUPER + J                Cambiar la división (vertical/horizontal)
+SUPER + flechas          Mover el foco
+SUPER + SHIFT + flechas  Mover la ventana
+SUPER + 1..0             Ir al escritorio 1..10
+SUPER + SHIFT + 1..0     Mandar la ventana al escritorio 1..10
+SUPER + S                Escritorio oculto (scratchpad)
+SUPER + C                Historial del portapapeles
+SUPER + T                Cambiar tema de colores
+SUPER + L                Bloquear pantalla
+SUPER + SHIFT + E        Menú de apagado
+SUPER + SHIFT + R        Recargar Hyprland
+SUPER + SHIFT + W        Reiniciar la barra
+Imprimir                 Captura de una zona
+SHIFT + Imprimir         Captura de pantalla completa
+3 dedos (touchpad)       Cambiar de escritorio
+--- Terminal ---
+deox-objetivo 10.10.11.42  Fijar objetivo (sale en la barra y en $OBJETIVO)
+deox-vpn-ip                IP de la VPN (LHOST)
+deox-tema --lista          Ver temas de colores
+LISTA

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# deox-objetivo — recuerda la IP/host de la máquina que estás auditando y la
+# muestra en la barra. También la exporta como $OBJETIVO en terminales nuevas.
+#   deox-objetivo 10.10.11.42    fija el objetivo
+#   deox-objetivo                lo muestra
+#   deox-objetivo --borrar       lo quita
+#   deox-objetivo --copiar       lo copia al portapapeles
+#   deox-objetivo --barra        JSON para Waybar
+set -uo pipefail
+F="${XDG_CACHE_HOME:-$HOME/.cache}/kali-deox/objetivo"
+mkdir -p "$(dirname "$F")"
+actual() { [ -s "$F" ] && cat "$F"; }
+case "${1:-}" in
+  --barra)
+    if o="$(actual)"; then printf '{"text":"󰓾 %s","tooltip":"Objetivo (clic = copiar, derecho = borrar)","class":"fijado"}\n' "$o"
+    else printf '{"text":"","class":"vacio"}\n'; fi ;;
+  --borrar) rm -f "$F"; echo "Objetivo borrado." ;;
+  --copiar) o="$(actual)" && printf '%s' "$o" | wl-copy && notify-send -a kali-deox "Copiado" "$o" ;;
+  "") actual || { echo "Sin objetivo. Uso: deox-objetivo 10.10.11.42" >&2; exit 1; } ;;
+  *)
+    # Solo IPs, rangos o nombres de host razonables (evita meter basura en la barra).
+    if [[ "$1" =~ ^[A-Za-z0-9.:/_-]{1,100}$ ]]; then echo "$1" > "$F"; echo "Objetivo: $1"
+    else echo "Valor no válido: $1" >&2; exit 1; fi ;;
+esac

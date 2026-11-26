@@ -1,51 +1,43 @@
-# CLAUDE.md — Reglas del repo `arch-deox`
+# CLAUDE.md — Reglas del repo `kali-deox` (antes `arch-deox`)
 
-Entorno de escritorio **reproducible** sobre **CachyOS** (base Arch optimizada), con el
-shell **Caelestia** (Quickshell sobre Hyprland). Máquina: portátil Medion (Intel Iris Xe).
-Usuario `deox`, nuevo en Arch/CachyOS.
+Entorno **reproducible** sobre **Kali Linux** (rolling) para pentesting / hacking ético, con un
+escritorio **Hyprland** propio, bonito y personalizable. Máquina: portátil Medion (Intel Iris Xe).
+Usuario `deox`, nuevo en Linux.
 
-> **Historia:** este repo fue antes un rice eDEX-UI (Waybar/Rofi/Mako Catppuccin + kitty Tron
-> + panel `deoxhud` + capa pentest/BlackArch) gestionado con **chezmoi**. Se migró por decisión
-> del usuario a **CachyOS + Caelestia**, gestionando los dotfiles con **caelestia-cli** (ya no
-> chezmoi). Todo lo anterior sigue en el historial git y en la rama `main`.
+> **Historia:** rice eDEX-UI sobre Arch (chezmoi, rama `main`) → CachyOS + Caelestia → **Kali**
+> (decisión del usuario: Arch no le convenció). Todo lo anterior sigue en el historial git.
 
 ## Cómo trabajar aquí (IMPORTANTE)
-1. **Planifica primero.** No toques el sistema hasta que el usuario apruebe el plan.
-2. **El repo es un KIT DE INSTALACIÓN, no una fuente de dotfiles.** El escritorio lo despliega
-   `caelestia install`. Este repo aporta: `scripts/` (arranque), `packages/` (listas),
-   `overrides/` (ajustes personales) y `docs/`. No dupliques dentro del repo lo que ya gestiona
-   Caelestia; para tweaks personales usa `overrides/`.
-3. **Pide confirmación antes de**: `sudo`, `pacman -S`, `shelly -S` / `paru -S`, `rm`,
-   `git push`, `curl … | sh`, y antes de instalar algo pesado.
-4. **Nunca** hagas commit de secretos.
-5. **Family-friendly:** el usuario es nuevo. Explica lo que haces, **en español**, cercano.
+1. **Planifica primero.** No toques el sistema del usuario hasta que apruebe el plan.
+2. **El repo es un KIT DE INSTALACIÓN + dotfiles.** `scripts/` monta el sistema, `dotfiles/`
+   tiene la configuración del escritorio (ya no hay Caelestia: la gestionamos nosotros),
+   `packages/` las listas, `migracion/` el paso desde CachyOS.
+3. **Pide confirmación antes de**: `sudo`, `apt install`, `rm`, `git push`, `dd`,
+   `curl … | sh`, y antes de instalar algo pesado. Los scripts preguntan siempre (`ask`).
+4. **Seguridad de lo que se instala** (pedido expreso del usuario): todo paquete nuevo debe
+   (a) existir en el repo oficial de Kali, (b) pasar `deox-auditar --simular` sin
+   `[ACTUALIZA YA]`, y (c) no arrastrar servicios innecesarios (ej. exim4). Nada de repos de
+   terceros, PPAs, `curl | sh` ni binarios sueltos. Solo repos `kali-rolling` oficiales.
+5. **Nunca** hagas commit de secretos (claves, `.gpg` de copias, contraseñas wifi).
+6. **Family-friendly:** el usuario es nuevo. Explica lo que haces, **en español**, cercano.
+7. **Antes de cada commit:** `bash tests/verificar.sh` (y en Kali con Hyprland instalado,
+   valida la config con `Hyprland --verify-config`).
+
+## Detalles técnicos a recordar
+- **Hyprland ≥ 0.57 usa config en Lua** (`hyprland.lua`, API `hl.*`). El antiguo
+  `hyprland.conf` ya NO se lee. `hyprlock`/`hypridle` siguen con su formato propio.
+  `hyprctl dispatch` también usa sintaxis Lua: `hyprctl dispatch 'hl.dsp.exit()'`.
+- Sesión: `start-hyprland` (envoltorio oficial). greetd en Debian/Kali corre como `_greetd`.
+- Fondo con `swaybg` (vía `deox-fondo`), no hyprpaper.
+- Colores: `dotfiles/temas/*.tema` + plantillas `*.tpl` → `deox-tema` las rellena en `~/.config`.
+- Ajustes personales de Hyprland: `~/.config/hypr/usuario.lua` (se crea una vez, no se pisa).
+- Kali rolling: siempre `apt full-upgrade`, nunca mezclar repos de Debian/Ubuntu.
 
 ## Estructura
-- `scripts/` → `bootstrap.sh` (monta todo de un tirón) + pasos: `00-post-install`
-  (sistema+drivers Intel), `10-caelestia` (helper AUR + caelestia-cli + `caelestia install`),
-  `20-login-manager` (greetd+tuigreet), `30-extras` (AUR/ufw/servicios),
-  `40-snapshots` (snapshots Btrfs/snapper + rollback), `50-backup` (copia de datos personales).
-- `packages/` → `pkglist-native.txt` (complementos oficiales) y `pkglist-aur.txt`
-  (caelestia-cli + extras). `update-lists.sh` **audita** (no regenera) las listas.
-- `overrides/` → ajustes personales que Caelestia respeta (Hyprland `user.conf`, wallpaper).
-- `system/` → `greetd-config.toml` (va a `/etc/greetd/`, lo aplica `scripts/20-login-manager.sh`).
-- `docs/` → `CONTEXTO-CAELESTIA.md` (punto de entrada) y `GUIA-CACHYOS-CAELESTIA.md` (novatos).
-
-## Estética (decidida)
-- **Caelestia shell** (Quickshell): barra, launcher, notificaciones, lockscreen, wallpaper.
-- Compositor: **Hyprland** (lo configura Caelestia; tus tweaks van en `overrides/hypr-user.conf`).
-- Terminal por defecto de Caelestia: **foot** + shell **fish**.
-
-## Detalles del entorno
-1. **CachyOS** = base del sistema (kernel optimizado + repos -march). Instalación limpia por ISO.
-2. **Caelestia** = escritorio completo, desplegado y gestionado con `caelestia-cli`.
-3. **greetd + tuigreet** = pantalla de login (Caelestia no trae gestor de login).
-4. **Helper AUR**: en CachyOS 2026 por defecto es **`shelly`** (antes `paru`). Los scripts
-   detectan cuál hay; ambos sirven para `caelestia-cli`.
-
-## Reproducir en otra máquina
-1. Instalar **CachyOS** (ISO + Calamares) con NetworkManager y perfil mínimo/Hyprland.
-2. Clonar este repo y correr, en orden: `scripts/00…` → `10…` → (`caelestia install`) →
-   `20…` → `30…` (opcional).
-3. Copiar `overrides/` a las rutas que indica `overrides/README.md`. Reiniciar.
-Ver `README.md` y `docs/GUIA-CACHYOS-CAELESTIA.md`.
+- `migrar.sh` → entrada única (detecta CachyOS/Kali).
+- `migracion/migrar-desde-cachyos.sh` → copia + ISO (GPG/SHA256) + USB + instrucciones.
+- `scripts/` → `bootstrap.sh`, `10-sistema`, `20-escritorio`, `25-login`, `30-hacking`,
+  `40-seguridad`, `50-snapshots`, `60-copia`, `instalar-dotfiles.sh`, `lib.sh`.
+- `dotfiles/` → `hypr/ waybar/ rofi/ mako/ kitty/ wlogout/ fastfetch/ zsh/ temas/ bin/`.
+- `packages/` → `base.txt`, `escritorio.txt`, `hacking-extra.txt`.
+- `sistema/greetd-config.toml` · `tests/verificar.sh` · `docs/`.

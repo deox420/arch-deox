@@ -1,0 +1,64 @@
+# base.txt — sistema, hardware del portátil (Intel Iris Xe) y utilidades.
+# Instalar:  sudo apt install $(grep -vE '^\s*(#|$)' packages/base.txt | sed 's/#.*//')
+# (lo hace scripts/10-sistema.sh)
+
+# --- Microcódigo y firmware Intel (seguridad del CPU, wifi, sonido, gráfica) ---
+intel-microcode
+firmware-misc-nonfree
+firmware-intel-graphics
+firmware-sof-signed
+firmware-iwlwifi
+
+# --- Vídeo acelerado / Vulkan en Iris Xe ---
+intel-media-va-driver-non-free
+vainfo
+mesa-vulkan-drivers
+
+# --- Energía (portátil) ---
+power-profiles-daemon
+thermald
+brightnessctl
+
+# --- Red, bluetooth, sonido ---
+network-manager
+network-manager-applet
+bluez
+blueman
+pipewire
+pipewire-pulse
+wireplumber
+pavucontrol
+playerctl
+
+# --- Seguridad del propio sistema ---
+# (needrestart y debsecan se quitaron tras la auditoría: needrestart tenía un CVE
+#  pendiente en Kali y debsecan lo sustituye deox-auditar, sin arrastrar exim4.)
+ufw
+python3-apt
+apparmor
+apparmor-utils
+
+# --- Copias / snapshots ---
+timeshift
+rsync
+
+# --- Terminal: utilidades ---
+git
+curl
+wget
+unzip
+p7zip-full
+neovim
+fzf
+ripgrep
+fd-find
+bat
+eza
+zoxide
+btop
+fastfetch
+tree
+jq
+man-db
+xdg-user-dirs
+locales

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# deox-vpn-ip — IP de tu VPN (tun0/wg0/…): la que usas como LHOST en reverse shells.
+#   deox-vpn-ip           imprime la IP
+#   deox-vpn-ip --barra   salida JSON para Waybar
+#   deox-vpn-ip --copiar  la copia al portapapeles
+set -uo pipefail
+ip_vpn() {
+  local dev
+  for dev in tun0 tun1 wg0 tap0; do
+    ip -4 -o addr show dev "$dev" 2>/dev/null | awk '{split($4,a,"/"); print a[1]; exit}' | grep . && return 0
+  done
+  return 1
+}
+case "${1:-}" in
+  --barra)
+    if v="$(ip_vpn)"; then printf '{"text":"󰖂 %s","tooltip":"VPN activa (clic = copiar)","class":"activa"}\n' "$v"
+    else printf '{"text":"󰖂 off","tooltip":"Sin VPN","class":"desconectada"}\n'; fi ;;
+  --copiar)
+    v="$(ip_vpn)" && printf '%s' "$v" | wl-copy && notify-send -a kali-deox "Copiado" "$v" ;;
+  *) ip_vpn || { echo "Sin VPN (tun0/wg0) activa." >&2; exit 1; } ;;
+esac

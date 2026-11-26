@@ -2,8 +2,16 @@
 *.swp
 *~
 .DS_Store
-# Claves age (¡nunca subir secretos!)
-*.key
-key.txt
 __pycache__/
 *.pyc
+# ¡Nunca subir secretos ni copias!
+*.key
+key.txt
+*.gpg
+*.asc
+secretos.tar*
+kali-deox-migracion/
+kali-deox-copia/
+# ISOs y descargas grandes
+*.iso
+*.iso.part
